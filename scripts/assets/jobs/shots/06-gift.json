@@ -1,0 +1,7 @@
+{
+  "prompt": "A white gift box with a cobalt-blue satin bow on a cream surface, rotating slowly on a turntable. Clean minimal product shot, warm cream background (#F5F2EB), soft even studio light, one accent colour cobalt blue (#2F6BFF), simple smooth camera motion, flat and bright, not cinematic, no dramatic lighting, no people, no hands, no faces, no text, no logos.",
+  "duration": "5",
+  "aspect_ratio": "16:9",
+  "negative_prompt": "people, person, human, face, hands, fingers, body, silhouette, face id, biometric, text, letters, numbers, words, logo, watermark, dark, dramatic, cinematic, blur, distort, low quality",
+  "cfg_scale": 0.5
+}

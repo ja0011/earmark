@@ -1,0 +1,7 @@
+{
+  "prompt": "A plain white smartphone lying flat on a cream surface; its screen softly lights up with a plain soft blue glow, with no interface, no icons and no text. Slow top-down push-in. Clean minimal product shot, warm cream background (#F5F2EB), soft even studio light, one accent colour cobalt blue (#2F6BFF), simple smooth camera motion, flat and bright, not cinematic, no dramatic lighting, no people, no hands, no faces, no text, no logos.",
+  "duration": "5",
+  "aspect_ratio": "16:9",
+  "negative_prompt": "people, person, human, face, hands, fingers, body, silhouette, face id, biometric, text, letters, numbers, words, logo, watermark, dark, dramatic, cinematic, blur, distort, low quality",
+  "cfg_scale": 0.5
+}
