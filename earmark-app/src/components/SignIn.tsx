@@ -104,7 +104,7 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
         {/* Passkey */}
         <section aria-labelledby="si-passkey" className="flex flex-col rounded-xl border border-rule bg-receipt p-4">
           <h3 id="si-passkey" className="text-[18px] font-semibold">Try it as Maya or Alex</h3>
-          <p className="mt-1 text-[16px] text-ink-soft">Shared demo accounts, the same on every device. Face ID or Touch ID approves each step. No wallet needed.</p>
+          <p className="mt-1 text-[16px] text-ink-soft">Shared demo accounts, the same on every device. Your device passkey approves each step. No wallet needed.</p>
           {!passkeysSupported() && <p className="mt-2 text-[16px] font-medium">This browser can't use passkeys here. Open Earmark on https.</p>}
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             {personas.map((p) => (

@@ -53,7 +53,7 @@ function rpId() {
 function checkUserVerified(cred: PublicKeyCredential) {
   const resp = cred.response as AuthenticatorAssertionResponse;
   const flags = new Uint8Array(resp.authenticatorData)[32];
-  if ((flags & 0x04) === 0) throw new Error('Your device did not verify you (Face ID, Touch ID or PIN). Try again.');
+  if ((flags & 0x04) === 0) throw new Error('Your device did not verify you. Try again.');
 }
 
 export class PasskeyError extends Error {}
