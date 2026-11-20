@@ -1,0 +1,121 @@
+{
+  "duration": 7.566,
+  "lines": [
+    {
+      "speaker": "Earmark",
+      "text": "Hey Alex, your $45 shovel gift expires in four days. Want me to buy it for you?",
+      "start": 0,
+      "end": 5.573,
+      "words": [
+        {
+          "text": "Hey",
+          "start": 0,
+          "end": 0.197
+        },
+        {
+          "text": "Alex,",
+          "start": 0.267,
+          "end": 0.627
+        },
+        {
+          "text": "your",
+          "start": 0.662,
+          "end": 0.789
+        },
+        {
+          "text": "$45",
+          "start": 0.824,
+          "end": 1.707
+        },
+        {
+          "text": "shovel",
+          "start": 1.776,
+          "end": 2.043
+        },
+        {
+          "text": "gift",
+          "start": 2.09,
+          "end": 2.287
+        },
+        {
+          "text": "expires",
+          "start": 2.334,
+          "end": 2.844
+        },
+        {
+          "text": "in",
+          "start": 2.902,
+          "end": 2.984
+        },
+        {
+          "text": "four",
+          "start": 3.065,
+          "end": 3.262
+        },
+        {
+          "text": "days.",
+          "start": 3.309,
+          "end": 3.785
+        },
+        {
+          "text": "Want",
+          "start": 4.029,
+          "end": 4.191
+        },
+        {
+          "text": "me",
+          "start": 4.226,
+          "end": 4.296
+        },
+        {
+          "text": "to",
+          "start": 4.319,
+          "end": 4.365
+        },
+        {
+          "text": "buy",
+          "start": 4.412,
+          "end": 4.551
+        },
+        {
+          "text": "it",
+          "start": 4.598,
+          "end": 4.656
+        },
+        {
+          "text": "for",
+          "start": 4.702,
+          "end": 4.841
+        },
+        {
+          "text": "you?",
+          "start": 4.911,
+          "end": 5.573
+        }
+      ]
+    },
+    {
+      "speaker": "Alex",
+      "text": "Yeah, do it.",
+      "start": 6.173,
+      "end": 7.566,
+      "words": [
+        {
+          "text": "Yeah,",
+          "start": 6.173,
+          "end": 6.603
+        },
+        {
+          "text": "do",
+          "start": 6.928,
+          "end": 7.055
+        },
+        {
+          "text": "it.",
+          "start": 7.137,
+          "end": 7.566
+        }
+      ]
+    }
+  ]
+}

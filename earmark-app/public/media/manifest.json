@@ -1,0 +1,294 @@
+{
+  "generated": "scripts/assets/build_manifest.py",
+  "images": {
+    "claw-hammer": {
+      "kind": "product-cutout",
+      "aspect": "1:1",
+      "alpha": true,
+      "files": [
+        {
+          "src": "/media/claw-hammer-640.webp",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "src": "/media/claw-hammer-1280.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "src": "/media/claw-hammer-2000.webp",
+          "width": 2000,
+          "height": 2000
+        }
+      ],
+      "width": 2000,
+      "height": 2000,
+      "srcset": "/media/claw-hammer-640.webp 640w, /media/claw-hammer-1280.webp 1280w, /media/claw-hammer-2000.webp 2000w",
+      "alsoInHartwell": true
+    },
+    "cordless-drill": {
+      "kind": "product-cutout",
+      "aspect": "1:1",
+      "alpha": true,
+      "files": [
+        {
+          "src": "/media/cordless-drill-640.webp",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "src": "/media/cordless-drill-1280.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "src": "/media/cordless-drill-2000.webp",
+          "width": 2000,
+          "height": 2000
+        }
+      ],
+      "width": 2000,
+      "height": 2000,
+      "srcset": "/media/cordless-drill-640.webp 640w, /media/cordless-drill-1280.webp 1280w, /media/cordless-drill-2000.webp 2000w",
+      "alsoInHartwell": true
+    },
+    "hartwell-storefront": {
+      "kind": "still",
+      "aspect": "16:9",
+      "alpha": false,
+      "files": [
+        {
+          "src": "/media/hartwell-storefront-640.webp",
+          "width": 640,
+          "height": 360
+        },
+        {
+          "src": "/media/hartwell-storefront-1280.webp",
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "src": "/media/hartwell-storefront-2000.webp",
+          "width": 2000,
+          "height": 1125
+        }
+      ],
+      "width": 2000,
+      "height": 1125,
+      "srcset": "/media/hartwell-storefront-640.webp 640w, /media/hartwell-storefront-1280.webp 1280w, /media/hartwell-storefront-2000.webp 2000w",
+      "alsoInHartwell": true
+    },
+    "ice-scraper": {
+      "kind": "product-cutout",
+      "aspect": "1:1",
+      "alpha": true,
+      "files": [
+        {
+          "src": "/media/ice-scraper-640.webp",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "src": "/media/ice-scraper-1280.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "src": "/media/ice-scraper-2000.webp",
+          "width": 2000,
+          "height": 2000
+        }
+      ],
+      "width": 2000,
+      "height": 2000,
+      "srcset": "/media/ice-scraper-640.webp 640w, /media/ice-scraper-1280.webp 1280w, /media/ice-scraper-2000.webp 2000w",
+      "alsoInHartwell": true
+    },
+    "rock-salt": {
+      "kind": "product-cutout",
+      "aspect": "1:1",
+      "alpha": true,
+      "files": [
+        {
+          "src": "/media/rock-salt-640.webp",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "src": "/media/rock-salt-1280.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "src": "/media/rock-salt-2000.webp",
+          "width": 2000,
+          "height": 2000
+        }
+      ],
+      "width": 2000,
+      "height": 2000,
+      "srcset": "/media/rock-salt-640.webp 640w, /media/rock-salt-1280.webp 1280w, /media/rock-salt-2000.webp 2000w",
+      "alsoInHartwell": true
+    },
+    "snow-shovel": {
+      "kind": "product-cutout",
+      "aspect": "1:1",
+      "alpha": true,
+      "files": [
+        {
+          "src": "/media/snow-shovel-640.webp",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "src": "/media/snow-shovel-1280.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "src": "/media/snow-shovel-2000.webp",
+          "width": 2000,
+          "height": 2000
+        }
+      ],
+      "width": 2000,
+      "height": 2000,
+      "srcset": "/media/snow-shovel-640.webp 640w, /media/snow-shovel-1280.webp 1280w, /media/snow-shovel-2000.webp 2000w",
+      "alsoInHartwell": true
+    },
+    "story-alex-driveway": {
+      "kind": "still",
+      "aspect": "3:2",
+      "alpha": false,
+      "files": [
+        {
+          "src": "/media/story-alex-driveway-640.webp",
+          "width": 640,
+          "height": 427
+        },
+        {
+          "src": "/media/story-alex-driveway-1280.webp",
+          "width": 1280,
+          "height": 853
+        },
+        {
+          "src": "/media/story-alex-driveway-2000.webp",
+          "width": 2000,
+          "height": 1333
+        }
+      ],
+      "width": 2000,
+      "height": 1333,
+      "srcset": "/media/story-alex-driveway-640.webp 640w, /media/story-alex-driveway-1280.webp 1280w, /media/story-alex-driveway-2000.webp 2000w",
+      "alsoInHartwell": false
+    },
+    "story-alex-shoveling": {
+      "kind": "still",
+      "aspect": "3:2",
+      "alpha": false,
+      "files": [
+        {
+          "src": "/media/story-alex-shoveling-640.webp",
+          "width": 640,
+          "height": 427
+        },
+        {
+          "src": "/media/story-alex-shoveling-1280.webp",
+          "width": 1280,
+          "height": 853
+        },
+        {
+          "src": "/media/story-alex-shoveling-2000.webp",
+          "width": 2000,
+          "height": 1333
+        }
+      ],
+      "width": 2000,
+      "height": 1333,
+      "srcset": "/media/story-alex-shoveling-640.webp 640w, /media/story-alex-shoveling-1280.webp 1280w, /media/story-alex-shoveling-2000.webp 2000w",
+      "alsoInHartwell": false
+    },
+    "story-maya-couch": {
+      "kind": "still",
+      "aspect": "3:2",
+      "alpha": false,
+      "files": [
+        {
+          "src": "/media/story-maya-couch-640.webp",
+          "width": 640,
+          "height": 427
+        },
+        {
+          "src": "/media/story-maya-couch-1280.webp",
+          "width": 1280,
+          "height": 853
+        },
+        {
+          "src": "/media/story-maya-couch-2000.webp",
+          "width": 2000,
+          "height": 1333
+        }
+      ],
+      "width": 2000,
+      "height": 1333,
+      "srcset": "/media/story-maya-couch-640.webp 640w, /media/story-maya-couch-1280.webp 1280w, /media/story-maya-couch-2000.webp 2000w",
+      "alsoInHartwell": false
+    },
+    "work-gloves": {
+      "kind": "product-cutout",
+      "aspect": "1:1",
+      "alpha": true,
+      "files": [
+        {
+          "src": "/media/work-gloves-640.webp",
+          "width": 640,
+          "height": 640
+        },
+        {
+          "src": "/media/work-gloves-1280.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "src": "/media/work-gloves-2000.webp",
+          "width": 2000,
+          "height": 2000
+        }
+      ],
+      "width": 2000,
+      "height": 2000,
+      "srcset": "/media/work-gloves-640.webp 640w, /media/work-gloves-1280.webp 1280w, /media/work-gloves-2000.webp 2000w",
+      "alsoInHartwell": true
+    }
+  },
+  "hero": {
+    "frames": {
+      "pattern": "/media/hero/frames/f{0000}.webp",
+      "first": "/media/hero/frames/f0001.webp",
+      "count": 150,
+      "fps": 15,
+      "width": 1600,
+      "height": 900,
+      "pad": 4,
+      "start": 1
+    },
+    "video": {
+      "src": "/media/hero/hero.mp4",
+      "width": 1600,
+      "height": 900,
+      "duration": 10.04,
+      "audio": false
+    },
+    "poster": {
+      "src": "/media/hero/poster.webp",
+      "width": 1600,
+      "height": 900
+    }
+  },
+  "call": {
+    "audio": "/media/call/call.mp3",
+    "transcript": "/media/call/call.json",
+    "duration": 7.566
+  }
+}

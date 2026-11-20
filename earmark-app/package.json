@@ -1,0 +1,44 @@
+{
+  "name": "earmark-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n web,server -c blue,gray \"npm:dev:web\" \"npm:dev:server\"",
+    "dev:web": "vite",
+    "dev:server": "tsx watch --env-file-if-exists=.env server/index.ts",
+    "start:server": "tsx --env-file-if-exists=.env server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "elevenlabs:agent": "tsx --env-file-if-exists=.env server/elevenlabs/create-agent.ts",
+    "elevenlabs:import-twilio": "tsx --env-file-if-exists=.env server/elevenlabs/import-twilio.ts",
+    "local:chain": "tsx scripts/local-chain.ts",
+    "local:store": "tsx scripts/demo-store.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.11.0",
+    "@elevenlabs/client": "^1.37.1",
+    "earmark-plugin": "file:../earmark-plugin",
+    "express": "^5.1.0",
+    "gsap": "^3.13.0",
+    "lenis": "^1.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^9.1.0",
+    "tailwindcss": "^4.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0"
+  }
+}

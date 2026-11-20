@@ -1,0 +1,10 @@
+{
+  "prompt": "Photorealistic candid photo of the young man from the first reference image (same face, same messy light-brown hair, same navy knit beanie, same dark olive puffer jacket over a grey hoodie) shoveling snow on his suburban driveway at sunrise, using exactly the snow shovel from the second reference image (matte black straight handle with black D-grip, wide steel-blue metal blade with a metal wear strip). He grips the shovel naturally with both hands, mid-motion lifting a scoop of snow, his breath clearly visible as a soft puff of vapour coming from his mouth in the cold air. Warm low golden sunrise light from the side, long shadows on the snow, a cleared strip of driveway behind him. 35mm, cinematic. Keep his outfit colours exactly as in the reference: a clearly NAVY-BLUE ribbed knit beanie (saturated navy blue, not grey or black) and a DARK OLIVE-GREEN puffer jacket (not black, not brown) over a mid-grey hoodie. No text, no logos, no brand names, no watermark.",
+  "image_urls": [
+    "@alex-ref",
+    "@shovel"
+  ],
+  "aspect_ratio": "3:2",
+  "resolution": "2K",
+  "output_format": "png"
+}

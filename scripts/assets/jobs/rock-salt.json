@@ -1,0 +1,9 @@
+{
+  "prompt": "Studio product photograph of a 20 lb woven plastic bag of rock salt for de-icing, plain off-white bag with a simple steel-blue band and no printing or text at all, standing upright, a few salt crystals spilled in front of it. Match the reference image exactly in style: the same plain seamless very light warm-grey background, the same soft softbox key light from the upper left, the same gentle soft shadow, the same three-quarter camera angle and the same e-commerce product-shot look. Show only this one product, centered with generous margin, no shovel. Unbranded. No text, no logos, no brand names, no watermark.",
+  "image_urls": [
+    "@shovel"
+  ],
+  "aspect_ratio": "1:1",
+  "resolution": "2K",
+  "output_format": "png"
+}

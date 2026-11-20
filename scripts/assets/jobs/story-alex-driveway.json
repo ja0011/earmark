@@ -1,0 +1,9 @@
+{
+  "prompt": "Photorealistic candid photo of the young man from the reference image (same face, same messy light-brown hair, same navy knit beanie, same dark olive puffer jacket over a grey hoodie). He stands on his suburban driveway the morning after a heavy snowfall, snow up to his shins, a car behind him buried in snow, soft cold morning light. He holds a plain generic black smartphone (simple case, no recognizable camera design) in one hand, looking at it and laughing genuinely. Natural hand with five fingers, phone screen facing him (screen not visible to camera). 35mm, cinematic, cool blue tones with a touch of warm light. Keep his outfit colours exactly as in the reference: a clearly NAVY-BLUE ribbed knit beanie (saturated navy blue, not grey or black) and a DARK OLIVE-GREEN puffer jacket (not black, not brown) over a mid-grey hoodie. No text, no logos, no brand names, no watermark.",
+  "image_urls": [
+    "@alex-ref"
+  ],
+  "aspect_ratio": "3:2",
+  "resolution": "2K",
+  "output_format": "png"
+}

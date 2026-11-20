@@ -1,0 +1,9 @@
+{
+  "prompt": "Photorealistic candid lifestyle photo of the woman from the reference image (same face, same dark hair in a low bun, same heather-grey crewneck sweater). She sits curled up on a comfortable sofa in a warm, cosy apartment in the evening, soft lamp light, a knit throw blanket, a mug on a side table, a window with a hint of winter outside. She is looking down at her smartphone held in both hands and smiling warmly. Natural hands with five fingers, phone screen facing her (screen not visible to camera). Shallow depth of field, 35mm, warm tones. No text, no logos, no brand names, no watermark.",
+  "image_urls": [
+    "@maya-ref"
+  ],
+  "aspect_ratio": "3:2",
+  "resolution": "2K",
+  "output_format": "png"
+}

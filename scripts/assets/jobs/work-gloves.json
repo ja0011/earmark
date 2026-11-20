@@ -1,0 +1,9 @@
+{
+  "prompt": "Studio product photograph of a pair of insulated winter work gloves, dark charcoal grey with tan suede palms and knit cuffs, one glove resting partly over the other. Match the reference image exactly in style: the same plain seamless very light warm-grey background, the same soft softbox key light from the upper left, the same gentle soft shadow, the same three-quarter camera angle and the same e-commerce product-shot look. Show only this one product, centered with generous margin, no shovel. Unbranded. No text, no logos, no brand names, no watermark.",
+  "image_urls": [
+    "@shovel"
+  ],
+  "aspect_ratio": "1:1",
+  "resolution": "2K",
+  "output_format": "png"
+}

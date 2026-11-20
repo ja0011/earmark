@@ -1,0 +1,16 @@
+{
+  "name": "hartwell-supply",
+  "private": true,
+  "description": "Hartwell Supply, a fictional neighbourhood hardware store that accepts Earmark gifts.",
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "dev": "concurrently -n api,web -c green,yellow \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "build": "npm --prefix backend run typecheck && npm --prefix frontend run build",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck",
+    "store-key": "npm --prefix backend run store-key",
+    "register": "npm --prefix backend run register"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
