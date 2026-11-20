@@ -4,6 +4,7 @@ import { formatUsdc } from 'earmark-plugin';
 import { DEMO_RECEIVER_PHONE, HARTWELL_API_URL, HARTWELL_URL } from './config';
 import { db, save, type Contact, type StoreRecord } from './db';
 import { same } from './chain';
+import { demoAccounts, PERSONAS, personaOf } from './demo';
 
 // ---------------------------------------------------------------- contacts
 
@@ -14,19 +15,41 @@ export function upsertContact(input: { name: string; address: string; phone?: st
   const name = input.name.trim().slice(0, 40);
   if (!name) throw Object.assign(new Error('name is required'), { status: 400 });
   const address = getAddress(input.address);
+  // Maya and Alex are the shared demo accounts; nobody else can take those names.
+  const persona = personaOf(name);
+  const demo = demoAccounts();
+  if (persona && demo && !same(demo[persona], address)) {
+    throw Object.assign(new Error('That name belongs to the shared demo account. Pick another name.'), { status: 409, code: 'NAME_TAKEN' });
+  }
   const existing = db.contacts.find((c) => same(c.address, address));
   const phone = input.phone || (name.toLowerCase() === 'alex' ? DEMO_RECEIVER_PHONE || undefined : undefined);
-  const c: Contact = { name, address, phone, pronoun: PRONOUNS[name.toLowerCase()] ?? 'them', createdAt: Date.now() };
+  // Keep the original creation time: loading a page must not make you "the newest Alex".
+  const c: Contact = { name, address, phone, pronoun: PRONOUNS[name.toLowerCase()] ?? 'them', createdAt: existing?.createdAt ?? Date.now() };
   if (existing) Object.assign(existing, c);
   else db.contacts.push(c);
   save();
   return existing ?? c;
 }
 
-/** Most recently registered contact with that name. */
+/** "Maya" and "Alex" are always the shared demo accounts; other names: the earliest registered with that name. */
 export function contactByName(name: string): Contact | undefined {
+  const persona = personaOf(name);
+  const demo = demoAccounts();
+  if (persona && demo) return db.contacts.find((c) => same(c.address, demo[persona]));
   const n = name.trim().toLowerCase();
-  return [...db.contacts].sort((a, b) => b.createdAt - a.createdAt).find((c) => c.name.toLowerCase() === n);
+  return [...db.contacts].sort((a, b) => a.createdAt - b.createdAt).find((c) => c.name.toLowerCase() === n);
+}
+
+/** On boot: register the shared Maya and Alex, and retire old per-browser wallets that used those names. */
+export function ensureDemoContacts() {
+  const demo = demoAccounts();
+  if (!demo) return;
+  for (const c of db.contacts) {
+    const p = personaOf(c.name);
+    if (p && !same(c.address, demo[p])) c.name = `${p} (old)`;
+  }
+  for (const p of PERSONAS) upsertContact({ name: p, address: demo[p] });
+  save();
 }
 
 export function contactByAddress(a?: string): Contact | undefined {

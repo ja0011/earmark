@@ -198,11 +198,15 @@ npm run register                # registers the store's signer on Arc through Ea
 
 ## Demo script
 
-1. Open http://localhost:5173 and scroll the story.
-2. **Send a gift:** sign in as Maya with a passkey, type *"Send Alex $45 for a snow shovel at Hartwell Supply."*, review, **Lock it**.
-3. In another browser profile, sign in as Alex: "Maya sent you $45 for a snow shovel."
-4. **Open Hartwell Supply:** add the cordless drill, then Pay with Earmark gift → *"This gift only buys the snow shovel."*
-5. Swap for the snow shovel → pay → receipt: `SNOW SHOVEL ... $39.98 / CHANGE TO ALEX ... $5.02`, with the Arc transaction.
+Live prices are about 1/100 of the story, so the demo gift is $0.45 and the shovel $0.40.
+
+**Accounts.** There is exactly one **Maya** and one **Alex** for everyone: shared demo accounts held by the Earmark server, the same on every device and in private windows. Your device's passkey (Face ID / Touch ID) approves every step. The server will only sign the four Earmark calls (approve USDC to Earmark, createGift, redeem, refund) for them, capped at $1, and keeps Maya topped up with test USDC. To use your own wallet instead, choose **Connect MetaMask** (Arc Testnet) and pick your own name; Maya and Alex are reserved.
+
+1. Open the site and scroll the story, then **Open the app**.
+2. **Sign in as Maya**, type *"Send Alex $0.45 for a snow shovel at Hartwell Supply."*, review, **Lock it**.
+3. **Switch person → Sign in as Alex** (same browser, another browser, or your phone): "Maya sent you $0.45 for a snow shovel."
+4. **Shop at Hartwell:** add the cordless drill, then Pay with Earmark gift → *"This gift only buys the snow shovel."*
+5. Swap for the snow shovel → pay → receipt: `SNOW SHOVEL ... $0.40 / CHANGE TO ALEX ... $0.05`, with the Arc transaction. Alex's Profile shows the gift as Bought and the change in his balance.
 6. On a second gift, **Call me now** → say "Yeah, do it." → approve with your passkey.
 
 ## Credits

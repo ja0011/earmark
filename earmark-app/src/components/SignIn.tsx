@@ -9,7 +9,7 @@ type Props = { want?: Persona; title?: string; compact?: boolean };
  * After MetaMask connects, one field asks what people should call you (that's who "Send <name>…" finds).
  */
 export function SignIn({ want, title = 'Sign in', compact }: Props) {
-  const { wallet, wallets, create, signIn, signOut, hasInjected, connectMetaMask, saveMetaMask } = useWallet();
+  const { wallet, signInAs, signOut, hasInjected, connectMetaMask, saveMetaMask } = useWallet();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Address | null>(null);
@@ -32,7 +32,7 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
     return (
       <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${compact ? '' : 'rounded-2xl border border-rule bg-paper px-5 py-4'}`}>
         <span className="text-[17px]">
-          {wallet.kind === 'metamask' ? 'Connected with MetaMask as' : 'Signed in as'} <strong className="font-semibold">{wallet.name}</strong>{' '}
+          {wallet.kind === 'metamask' ? 'Connected with MetaMask as' : wallet.kind === 'demo' ? 'Signed in as the shared' : 'Signed in as'} <strong className="font-semibold">{wallet.name}</strong>{' '}
           <span className="mono text-[15px] text-ink-soft">
             {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
           </span>
@@ -72,14 +72,7 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
           placeholder="Your first name"
           className="mt-4 w-full rounded-xl border border-rule bg-receipt px-4 py-3 text-[18px] outline-none focus-visible:border-seal"
         />
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-[15px] text-ink-soft">Demo names:</span>
-          {(['Maya', 'Alex'] as const).map((p) => (
-            <button key={p} type="button" onClick={() => setName(p)} className="rounded-full border border-rule px-3 py-1 text-[15px] font-semibold hover:border-ink/40">
-              {p}
-            </button>
-          ))}
-        </div>
+        <p className="mt-2 text-[15px] text-ink-soft">Maya and Alex are the shared demo accounts, so pick your own name.</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <button type="submit" className="btn btn-seal" disabled={!!busy || !name.trim()}>
             {busy === 'mm-save' ? 'Saving…' : 'Continue'}
@@ -98,7 +91,6 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
   }
 
   const personas: Persona[] = want ? [want] : ['Maya', 'Alex'];
-  const existing = wallets.some((w) => w.kind === 'passkey');
   const connect = run('mm', async () => {
     const { address, knownName } = await connectMetaMask();
     if (knownName) await saveMetaMask(address, knownName);
@@ -111,18 +103,13 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {/* Passkey */}
         <section aria-labelledby="si-passkey" className="flex flex-col rounded-xl border border-rule bg-receipt p-4">
-          <h3 id="si-passkey" className="text-[18px] font-semibold">Use a passkey</h3>
-          <p className="mt-1 text-[16px] text-ink-soft">Face ID or Touch ID. No wallet needed: Earmark makes one in this browser.</p>
+          <h3 id="si-passkey" className="text-[18px] font-semibold">Try it as Maya or Alex</h3>
+          <p className="mt-1 text-[16px] text-ink-soft">Shared demo accounts, the same on every device. Face ID or Touch ID approves each step. No wallet needed.</p>
           {!passkeysSupported() && <p className="mt-2 text-[16px] font-medium">This browser can't use passkeys here. Open Earmark on https.</p>}
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
-            {existing && (
-              <button type="button" className="btn btn-seal" disabled={!!busy} onClick={run('signin', signIn)}>
-                {busy === 'signin' ? 'Waiting for your passkey…' : 'Sign in with passkey'}
-              </button>
-            )}
             {personas.map((p) => (
-              <button key={p} type="button" className={`btn ${existing ? 'btn-outline' : 'btn-seal'}`} disabled={!!busy} onClick={run(p, () => create(p))}>
-                {busy === p ? 'Creating passkey…' : `New passkey as ${p}`}
+              <button key={p} type="button" className="btn btn-seal" disabled={!!busy} onClick={run(p, () => signInAs(p))}>
+                {busy === p ? 'Waiting for your passkey…' : `Sign in as ${p}`}
               </button>
             ))}
           </div>
@@ -134,7 +121,7 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
           <p className="mt-1 text-[16px] text-ink-soft">Use your own wallet and USDC on Arc Testnet. MetaMask confirms every payment.</p>
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             {hasInjected ? (
-              <button type="button" className={`btn ${existing ? 'btn-outline' : 'btn-ink'}`} disabled={!!busy} onClick={connect}>
+              <button type="button" className="btn btn-ink" disabled={!!busy} onClick={connect}>
                 {busy === 'mm' ? 'Check MetaMask…' : 'Connect MetaMask'}
               </button>
             ) : (
@@ -145,7 +132,7 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
           </div>
         </section>
       </div>
-      {!want && <p className="mt-3 text-[15px] text-ink-soft">Demo: Maya sends the gift, Alex spends it. Test USDC is added for you.</p>}
+      {!want && <p className="mt-3 text-[15px] text-ink-soft">Demo: Maya sends the gift, Alex spends it. Maya always has test USDC.</p>}
       {error && (
         <p role="alert" className="mt-3 text-[16px] font-medium text-ink">
           {error}

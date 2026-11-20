@@ -83,8 +83,15 @@ export default function Profile() {
     return () => es.close();
   }, [wallet?.address]);
 
-  // Default to the tab that has something in it.
+  // Default to the tab that has something in it; start over when the person switches.
   const picked = useRef(false);
+  useEffect(() => {
+    picked.current = false;
+    setTab('for');
+    setReceived(null);
+    setSent(null);
+    setActivity(null);
+  }, [wallet?.address]);
   useEffect(() => {
     if (picked.current || !received || !sent) return;
     picked.current = true;
@@ -162,7 +169,7 @@ export default function Profile() {
             </a>
           </div>
           <p className="mt-1 text-[16px] text-ink-soft">
-            {wallet.kind === 'metamask' ? 'Connected with MetaMask' : 'Signed in with your passkey'} ·{' '}
+            {wallet.kind === 'metamask' ? 'Connected with MetaMask' : wallet.kind === 'demo' ? `Shared demo account: everyone signed in as ${wallet.name} sees this` : 'Signed in with your passkey'} ·{' '}
             <button type="button" onClick={signOut} className="font-semibold text-ink underline underline-offset-4">
               {wallet.kind === 'metamask' ? 'Disconnect' : 'Switch person'}
             </button>

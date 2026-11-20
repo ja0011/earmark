@@ -6,12 +6,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { getAddress, keccak256, toBytes, type Address, type Hex, type WalletClient } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { api } from './api';
-import { ensureArc, injected, injectedWalletFor, walletFor } from './chain';
+import { ensureArc, injected, injectedWalletFor, walletFor, type Eip1193 } from './chain';
 import { loadConfig } from './config';
 
 export type Persona = 'Maya' | 'Alex';
-export type WalletKind = 'passkey' | 'metamask';
-type StoredWallet = { kind?: WalletKind; name: string; address: Address; privateKey?: Hex; createdAt: number };
+/** demo = the shared Maya/Alex (the server signs, your device passkey approves); metamask = your own wallet; passkey = legacy per-browser wallet. */
+export type WalletKind = 'demo' | 'passkey' | 'metamask';
+type StoredWallet = { kind?: WalletKind; name: string; address: Address; privateKey?: Hex; credentialId?: string; createdAt: number };
+const KEY_DEVICE = 'earmark:device-passkey';
 export type Wallet = { credentialId: string; kind: WalletKind; name: string; address: Address };
 
 const KEY_WALLETS = 'earmark:wallets';
@@ -91,6 +93,8 @@ type Ctx = {
    * MetaMask: makes sure the wallet is on Arc; MetaMask then asks the person to confirm.
    */
   signer: (purpose: string) => Promise<WalletClient>;
+  /** Sign in as the shared Maya or Alex. Touch ID once on this device; the same account everywhere. */
+  signInAs: (persona: Persona) => Promise<Wallet>;
   /** True when a browser wallet such as MetaMask is installed. */
   hasInjected: boolean;
   /** Ask MetaMask to connect and switch to Arc. Returns the account and the name used before, if any. */
@@ -101,7 +105,62 @@ type Ctx = {
 
 const WalletCtx = createContext<Ctx | null>(null);
 
-const toWallet = (credentialId: string, w: StoredWallet): Wallet => ({ credentialId, kind: w.kind ?? 'passkey', name: w.name, address: w.address });
+const toWallet = (id: string, w: StoredWallet): Wallet => ({ credentialId: w.credentialId ?? id, kind: w.kind ?? 'passkey', name: w.name, address: w.address });
+const demoId = (p: Persona) => `demo:${p.toLowerCase()}`;
+
+/** A tiny EIP-1193 provider for a shared account: the server signs (only Earmark calls), reads go through /api/rpc. */
+function demoProvider(persona: Persona, address: Address, chainId: number): Eip1193 {
+  return {
+    request: async ({ method, params }) => {
+      const p = (params ?? []) as any[];
+      if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [address];
+      if (method === 'eth_chainId') return `0x${chainId.toString(16)}`;
+      if (method === 'eth_sendTransaction') {
+        const tx = p[0] ?? {};
+        const r = await api<{ hash: Hex }>(`/api/demo/${persona.toLowerCase()}/send`, { method: 'POST', json: { to: tx.to, data: tx.data ?? '0x', value: tx.value } });
+        return r.hash;
+      }
+      const res = await fetch('/api/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: p }) });
+      const body = await res.json();
+      if (body.error) throw Object.assign(new Error(body.error.message), { code: body.error.code, data: body.error.data });
+      return body.result;
+    },
+  };
+}
+
+/** The passkey this device uses to approve actions for the shared accounts (made once, then reused). */
+async function devicePasskey(): Promise<string> {
+  const saved = localStorage.getItem(KEY_DEVICE);
+  if (saved) {
+    await assertion(saved, 'sign-in');
+    return saved;
+  }
+  if (!passkeysSupported()) throw new PasskeyError('Passkeys need a secure browser context (https or localhost).');
+  let cred: PublicKeyCredential | null;
+  try {
+    cred = (await navigator.credentials.create({
+      publicKey: {
+        challenge: random(32),
+        rp: { name: 'Earmark', id: rpId() },
+        user: { id: random(16), name: 'earmark-demo', displayName: 'Earmark demo (this device)' },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -7 },
+          { type: 'public-key', alg: -257 },
+        ],
+        authenticatorSelection: { residentKey: 'preferred', userVerification: 'required' },
+        timeout: 60_000,
+        attestation: 'none',
+      },
+    })) as PublicKeyCredential | null;
+  } catch (e) {
+    if ((e as Error).name === 'NotAllowedError') throw new PasskeyError('The passkey check was cancelled.');
+    throw e;
+  }
+  if (!cred) throw new PasskeyError('No passkey was created.');
+  const id = b64url(cred.rawId);
+  localStorage.setItem(KEY_DEVICE, id);
+  return id;
+}
 const mmId = (a: string) => `mm:${a.toLowerCase()}`;
 
 async function registerPersona(w: Wallet) {
@@ -132,9 +191,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const wallet = currentId && all[currentId] ? toWallet(currentId, all[currentId]) : null;
   const wallets = Object.entries(all).map(([id, w]) => toWallet(id, w));
 
-  // Make sure the server knows this persona (contacts) even after a server reset.
+  // Make sure the server knows this person (contacts) even after a server reset. The shared accounts are the server's own.
   useEffect(() => {
-    if (wallet) api('/api/contacts', { method: 'POST', json: { name: wallet.name, address: wallet.address } }).catch(() => {});
+    if (wallet && wallet.kind !== 'demo') api('/api/contacts', { method: 'POST', json: { name: wallet.name, address: wallet.address } }).catch(() => {});
+  }, [wallet?.address]);
+
+  // Old per-browser Maya/Alex wallets are retired: sign them out so everyone lands on the shared accounts.
+  useEffect(() => {
+    if (wallet?.kind !== 'passkey') return;
+    loadConfig().then((cfg) => {
+      if (cfg.demo) {
+        localStorage.removeItem(KEY_CURRENT);
+        setCurrentId(null);
+      }
+    });
   }, [wallet?.address]);
 
   const select = (id: string) => {
@@ -192,6 +262,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     localStorage.removeItem(KEY_CURRENT);
     setCurrentId(null);
+  }, []);
+
+  const signInAs = useCallback(async (persona: Persona) => {
+    const cfg = await loadConfig();
+    if (!cfg.demo) throw new PasskeyError('The shared demo accounts are not set up on this server.');
+    const credentialId = await devicePasskey();
+    const id = demoId(persona);
+    const store = readAll();
+    store[id] = { kind: 'demo', name: persona, address: getAddress(cfg.demo[persona]), credentialId, createdAt: store[id]?.createdAt ?? Date.now() };
+    writeAll(store);
+    select(id);
+    return toWallet(id, store[id]);
   }, []);
 
   const [hasInjected, setHasInjected] = useState(false);
@@ -262,6 +344,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const w = readAll()[currentId];
       if (!w) throw new PasskeyError('Wallet not found on this browser.');
       const cfg = await loadConfig();
+      if (w.kind === 'demo') {
+        if (!w.credentialId) throw new PasskeyError('Sign in again on this device.');
+        await assertion(w.credentialId, purpose);
+        const persona = w.name as Persona;
+        return injectedWalletFor(cfg, demoProvider(persona, w.address, cfg.chainId), w.address);
+      }
       if (w.kind === 'metamask') {
         const provider = injected();
         if (!provider) throw new PasskeyError('MetaMask isn\u2019t available in this browser.');
@@ -281,7 +369,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <WalletCtx.Provider value={{ wallet, wallets, create, signIn, signOut, signer, hasInjected, connectMetaMask, saveMetaMask }}>{children}</WalletCtx.Provider>
+    <WalletCtx.Provider value={{ wallet, wallets, create, signIn, signOut, signer, signInAs, hasInjected, connectMetaMask, saveMetaMask }}>{children}</WalletCtx.Provider>
   );
 }
 

@@ -11,6 +11,8 @@ export type AppConfig = {
   explorer: string;
   changeLimit: string;
   hartwellUrl: string;
+  /** The shared Maya and Alex accounts (same for everyone). */
+  demo: { Maya: Address; Alex: Address } | null;
   features: { agent: 'claude' | 'rules'; events: 'quicknode' | 'poller'; calls: 'phone' | 'browser' | 'demo'; faucet: boolean };
 };
 
@@ -23,6 +25,7 @@ const FALLBACK: AppConfig = {
   explorer: 'https://explorer.testnet.arc.io',
   changeLimit: '10000000',
   hartwellUrl: 'http://localhost:5174',
+  demo: null,
   features: { agent: 'rules', events: 'poller', calls: 'demo', faucet: false },
 };
 

@@ -19,7 +19,8 @@ import {
 } from './config';
 import { db, save } from './db';
 import { allGifts, changeLimit, ownerWallet, pub, readGift, same, storeSigner, usdcBalance } from './chain';
-import { ensureHartwell, contactByAddress, publicContact, shortItem, storeByAddress, upsertContact, upsertStore, fetchCatalog, usdShort } from './directory';
+import { demoAccounts, demoSend, isDemoAddress, personaOf, topUpDemo } from './demo';
+import { ensureDemoContacts, ensureHartwell, contactByAddress, publicContact, shortItem, storeByAddress, upsertContact, upsertStore, fetchCatalog, usdShort } from './directory';
 import { giftJson } from './gifts';
 import { AgentError, parseGift } from './agent';
 import { quicknodeRouter, startPoller } from './quicknode';
@@ -84,6 +85,7 @@ app.get('/api/config', h(async (_req, res) => {
     explorer: EXPLORER,
     changeLimit: limit,
     hartwellUrl: HARTWELL_URL,
+    demo: demoAccounts(),
     features: {
       agent: ANTHROPIC_API_KEY ? 'claude' : 'rules',
       events: QUICKNODE_ENABLED ? 'quicknode' : 'poller',
@@ -330,8 +332,28 @@ app.post('/api/purchase-requests/:id', h(async (req, res) => {
 
 // ---------------------------------------------------------------- demo faucet
 
+// The shared Maya and Alex: the browser asks, the server signs (only Earmark calls, capped at $1).
+app.post('/api/demo/:persona/send', h(async (req, res) => {
+  const persona = personaOf(String(req.params.persona));
+  if (!persona) return res.status(404).json({ error: 'NO_SUCH_ACCOUNT' });
+  if (limited(`demo-send:${req.ip}`, 40, 3_600_000)) return res.status(429).json({ error: 'SLOW_DOWN', message: 'Too many demo transactions. Try again later.' });
+  const { to, data, value } = req.body ?? {};
+  if (typeof to !== 'string' || typeof data !== 'string' || !/^0x[0-9a-fA-F]*$/.test(data)) return res.status(400).json({ error: 'BAD_TX' });
+  try {
+    const r = await demoSend(persona, { to, data: data as Hex, value });
+    res.json({ hash: r.hash });
+  } catch (e: any) {
+    if (e?.status === 403) return res.status(403).json({ error: 'NOT_ALLOWED', message: e.message });
+    throw e;
+  }
+}));
+
 app.post('/api/demo/fund', h(async (req, res) => {
   const address = needAddress(req.body?.address, 'address');
+  if (isDemoAddress(address)) {
+    const txs = await topUpDemo();
+    return res.json(txs.length ? { ok: true, txHashes: txs } : { ok: true, already: true, message: 'The shared account already has enough.' });
+  }
   const role = req.body?.role === 'Maya' || req.body?.role === 'maya' ? 'maya' : 'alex';
   const dep = deployment();
   const wallet = ownerWallet();
@@ -400,4 +422,6 @@ app.listen(PORT, () => {
   startPoller().catch((e) => console.error('[events]', e));
   startReminders();
   ensureHartwell().catch(() => {});
+  ensureDemoContacts();
+  topUpDemo().catch((e) => console.warn('[demo] top-up failed:', e?.shortMessage ?? e?.message));
 });
