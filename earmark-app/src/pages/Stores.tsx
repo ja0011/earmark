@@ -184,14 +184,11 @@ app.use(earmarkRouter({
 
   return (
     <AppLayout title="For stores" variant="stores">
-      <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-end">
-        <div>
-          <h1 className="display" style={{ fontSize: 'clamp(3rem, 7vw, 6.5rem)' }}>
-            Add Earmark in under an hour.
-          </h1>
-          <p className="mt-6 max-w-[560px] text-[22px] leading-[1.45]">A button for your checkout. A signer for your server. That's it.</p>
-        </div>
-        <Media name="hartwell-storefront" ratio={16 / 9} alt="A small hardware store front in winter." className="rounded-[20px]" />
+      <div>
+        <h1 className="display max-w-[14ch]" style={{ fontSize: 'clamp(3rem, 7vw, 6.5rem)' }}>
+          Add Earmark in under an hour.
+        </h1>
+        <p className="mt-6 max-w-[560px] text-[22px] leading-[1.45]">A button for your checkout. A signer for your server. That's it.</p>
       </div>
 
       <ol className="mt-20 max-w-[860px] pl-5">
