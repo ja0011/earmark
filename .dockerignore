@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+assets-src
+screenshots
+contracts/lib
+contracts/out
+contracts/cache
+contracts/broadcast
+earmark-app/server/data
+hartwell-supply/backend/data
+.git

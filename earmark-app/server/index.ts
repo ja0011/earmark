@@ -25,6 +25,9 @@ import { AgentError, parseGift } from './agent';
 import { quicknodeRouter, startPoller } from './quicknode';
 import { sseHandler } from './sse';
 import { browserSession, createPurchaseRequest, placeCall, startReminders } from './calls';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { ROOT } from './config';
 
 const app = express();
 app.disable('x-powered-by');
@@ -311,6 +314,14 @@ app.post('/api/demo/fund', h(async (req, res) => {
   save();
   res.json({ ok: true, txHashes: txs });
 }));
+
+// ---------------------------------------------------------------- production: serve the built site
+
+const DIST = resolve(ROOT, 'dist');
+if (existsSync(resolve(DIST, 'index.html'))) {
+  app.use(express.static(DIST, { index: false, maxAge: '1h' }));
+  app.get(/^\/(?!api\/|webhooks\/).*/, (_req, res) => res.sendFile(resolve(DIST, 'index.html')));
+}
 
 // ---------------------------------------------------------------- errors
 

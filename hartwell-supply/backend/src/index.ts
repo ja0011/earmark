@@ -1,7 +1,9 @@
 import express, { type Router } from 'express';
 import { isAddress, isHex } from 'viem';
 import { earmarkRouter } from 'earmark-plugin/server';
-import { config, earmarkContract, signerKey, storeAddress, signerAddress } from './config.ts';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { BACKEND_DIR, config, earmarkContract, signerKey, storeAddress, signerAddress } from './config.ts';
 import { catalog } from './catalog.ts';
 import { findOrder, saveOrder, type OrderLine } from './orders.ts';
 
@@ -128,6 +130,13 @@ app.get('/api/orders/:txHash', async (req, res) => {
   }
   res.json(order);
 });
+
+/* ---------- production: serve the built store front from the same origin ---------- */
+const DIST = resolve(BACKEND_DIR, '../frontend/dist');
+if (existsSync(resolve(DIST, 'index.html'))) {
+  app.use(express.static(DIST, { index: false, maxAge: '1h' }));
+  app.get(/^\/(?!api\/|earmark\/).*/, (_req, res) => res.sendFile(resolve(DIST, 'index.html')));
+}
 
 app.listen(config.port, () => {
   console.log(`[hartwell] backend on http://localhost:${config.port}`);

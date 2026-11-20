@@ -14,7 +14,7 @@ export type Order = {
   paidAt: string;
 };
 
-const FILE = resolve(BACKEND_DIR, 'data/orders.json');
+const FILE = resolve(process.env.HARTWELL_DATA_DIR || resolve(BACKEND_DIR, 'data'), 'orders.json');
 
 function load(): Order[] {
   if (!existsSync(FILE)) return [];

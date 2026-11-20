@@ -68,7 +68,7 @@ export default function Stores() {
   const useDemo = () => {
     setName('Hartwell Supply');
     setWebsite(cfg?.hartwellUrl ?? 'http://localhost:5174');
-    setCatalogUrl('http://localhost:8788/earmark/catalog');
+    setCatalogUrl(`${(cfg?.hartwellUrl ?? 'http://localhost:5174').replace(/\/$/, '')}/earmark/catalog`);
   };
 
   const createKey = () => {
