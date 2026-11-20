@@ -1,6 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { getAddress, isAddress, parseEther, zeroAddress, type Address, type Hex } from 'viem';
-import { earmarkAbi, erc20Abi } from 'earmark-plugin';
+import { earmarkAbi, erc20Abi, formatUsdc } from 'earmark-plugin';
 import {
   ANTHROPIC_API_KEY,
   AGENT_ENABLED,
@@ -19,7 +19,7 @@ import {
 } from './config';
 import { db, save } from './db';
 import { allGifts, changeLimit, ownerWallet, pub, readGift, same, storeSigner, usdcBalance } from './chain';
-import { ensureHartwell, contactByAddress, publicContact, storeByAddress, upsertContact, upsertStore, fetchCatalog } from './directory';
+import { ensureHartwell, contactByAddress, publicContact, shortItem, storeByAddress, upsertContact, upsertStore, fetchCatalog, usdShort } from './directory';
 import { giftJson } from './gifts';
 import { AgentError, parseGift } from './agent';
 import { quicknodeRouter, startPoller } from './quicknode';
@@ -202,6 +202,63 @@ app.get('/api/gifts/:id', h(async (req, res) => {
   res.json({ gift: await giftJson(g) });
 }));
 
+// ---------------------------------------------------------------- activity (profile page)
+
+/** A person's history in their own words: gifts sent and received, purchases, refunds, test-USDC top-ups. */
+app.get('/api/activity', h(async (req, res) => {
+  const address = needAddress(req.query.address, 'address');
+  deployment();
+  type Entry = { id: string; kind: string; text: string; at: number | null; txHash: Hex | null; giftId?: string; amountUsd?: string; change?: string };
+  const out: Entry[] = [];
+  const noteAt = (giftId: string, kind: string) => db.notifications.find((n) => n.giftId === giftId && n.kind === kind)?.at ?? null;
+  const gifts = (await allGifts()).filter((g) => same(g.sender, address) || same(g.receiver, address)).slice(0, 60);
+  for (const g of gifts) {
+    const j = await giftJson(g);
+    const tx = db.giftTx[j.id] ?? {};
+    const iSent = same(j.sender, address);
+    const amount = usdShort(j.amount);
+    const item = (j.item?.name ?? 'gift').toLowerCase();
+    const short = shortItem(j.item?.name ?? 'item');
+    const receiver = j.receiverName ?? `${j.receiver.slice(0, 6)}…${j.receiver.slice(-4)}`;
+    const sender = j.senderName ?? (same(j.sender, deployment().owner) ? 'Earmark' : 'Someone');
+    out.push({
+      id: `${j.id}:created`,
+      kind: iSent ? 'sent' : 'received',
+      text: iSent ? `You sent ${receiver} ${amount} for a ${item}.` : `${sender} sent you ${amount} for a ${item}.`,
+      at: tx.createdAt ?? noteAt(j.id, 'GiftCreated'),
+      txHash: tx.createdTx ?? null,
+      giftId: j.id,
+      amountUsd: j.amountUsd,
+    });
+    if (j.status === 'Spent') {
+      const change = BigInt(tx.change ?? '0');
+      const toReceiver = !tx.changeTo || same(tx.changeTo, j.receiver);
+      let text = iSent ? `${receiver} bought the ${short}.` : `You bought the ${short}.`;
+      if (change > 0n) {
+        if (iSent) text += toReceiver ? ` ${formatUsdc(change)} went to ${receiver}.` : ` ${formatUsdc(change)} came back to you.`;
+        else text += toReceiver ? ` You kept ${formatUsdc(change)} change.` : ` ${formatUsdc(change)} went back to ${sender}.`;
+      }
+      out.push({ id: `${j.id}:spent`, kind: 'spent', text, at: tx.redeemedAt ?? noteAt(j.id, 'GiftRedeemed'), txHash: tx.redeemedTx ?? null, giftId: j.id, change: change > 0n ? formatUsdc(change) : undefined });
+    }
+    if (j.status === 'Refunded') {
+      out.push({
+        id: `${j.id}:refunded`,
+        kind: 'refunded',
+        text: iSent ? `Your ${amount} gift to ${receiver} expired. It came back to you.` : `The ${amount} gift from ${sender} expired and went back to ${sender}.`,
+        at: tx.refundedAt ?? noteAt(j.id, 'GiftRefunded'),
+        txHash: tx.refundedTx ?? null,
+        giftId: j.id,
+      });
+    }
+  }
+  for (const f of db.fundTx) {
+    if (!same(f.address, address)) continue;
+    out.push({ id: `fund:${f.txHash}`, kind: 'funded', text: `Test USDC added to your wallet${f.amountUsd ? ` (+${f.amountUsd})` : ''}.`, at: f.at, txHash: f.txHash });
+  }
+  out.sort((a, b) => (b.at ?? 0) - (a.at ?? 0) || b.id.localeCompare(a.id));
+  res.json({ activity: out.slice(0, 80) });
+}));
+
 // ---------------------------------------------------------------- notifications
 
 app.get('/api/events', sseHandler);
@@ -287,6 +344,7 @@ app.post('/api/demo/fund', h(async (req, res) => {
 
   const client = pub();
   const txs: Hex[] = [];
+  const amounts: string[] = []; // USD per tx, for the activity feed
   const account = wallet.account!;
   // Arc: native gas IS USDC, and the ERC-20 at 0x3600… reads the same balance (6 decimals).
   const gasTarget = parseEther('0.02'); // ~8 txs at Arc's 25 gwei
@@ -299,11 +357,13 @@ app.post('/api/demo/fund', h(async (req, res) => {
         txs.push(await wallet.writeContract({ address: dep.usdc, abi: [{ type: 'function', name: 'mint', stateMutability: 'nonpayable', inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [] }] as const, functionName: 'mint', args: [address, want - bal], chain: wallet.chain, account }));
       } else {
         txs.push(await wallet.writeContract({ address: dep.usdc, abi: erc20Abi, functionName: 'transfer', args: [address, want - bal], chain: wallet.chain, account }));
+        amounts.push(formatUsdc(want - bal));
       }
     }
   }
   if ((local || role === 'alex') && native < gasTarget / 2n) {
     txs.push(await wallet.sendTransaction({ to: address, value: gasTarget - native, chain: wallet.chain, account }));
+    amounts.push(formatUsdc((gasTarget - native) / 10n ** 12n)); // native USDC has 18 decimals
   }
   if (!txs.length) return res.json({ ok: true, already: true, message: 'This wallet already has enough.' });
   for (const t of txs) {
@@ -311,6 +371,7 @@ app.post('/api/demo/fund', h(async (req, res) => {
     if (r.status !== 'success') return res.status(502).json({ error: 'REVERTED', message: 'The top-up failed on chain.', txHashes: txs });
   }
   db.funded[key] = Date.now();
+  if (!local) txs.forEach((t, i) => db.fundTx.push({ address, txHash: t, amountUsd: amounts[i] ?? '', at: Date.now() }));
   save();
   res.json({ ok: true, txHashes: txs });
 }));

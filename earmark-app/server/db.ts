@@ -27,7 +27,19 @@ export type PurchaseRequest = {
   txHash?: Hex;
   createdAt: number;
 };
-export type GiftTx = { createdTx?: Hex; redeemedTx?: Hex; refundedTx?: Hex; price?: string; change?: string; changeTo?: Address };
+export type GiftTx = {
+  createdTx?: Hex;
+  redeemedTx?: Hex;
+  refundedTx?: Hex;
+  createdAt?: number;
+  redeemedAt?: number;
+  refundedAt?: number;
+  price?: string;
+  change?: string;
+  changeTo?: Address;
+};
+/** Demo-faucet top-ups, so a person's activity can show where their test USDC came from. */
+export type FundTx = { address: Address; txHash: Hex; amountUsd: string; at: number };
 
 type Data = {
   contacts: Contact[];
@@ -38,13 +50,14 @@ type Data = {
   giftTx: Record<string, GiftTx>;
   reminders: Record<string, { d7?: number; d4?: number }>;
   funded: Record<string, number>;
+  fundTx: FundTx[];
   lastBlock?: string;
 };
 
 const DIR = resolve(ROOT, process.env.EARMARK_DATA_DIR || 'server/data');
 const FILE = resolve(DIR, 'db.json');
 
-const empty = (): Data => ({ contacts: [], stores: [], notifications: [], purchaseRequests: [], processedLogs: [], giftTx: {}, reminders: {}, funded: {} });
+const empty = (): Data => ({ contacts: [], stores: [], notifications: [], purchaseRequests: [], processedLogs: [], giftTx: {}, reminders: {}, funded: {}, fundTx: [] });
 
 function load(): Data {
   if (!existsSync(FILE)) return empty();
@@ -66,6 +79,7 @@ export function save() {
     if (!existsSync(DIR)) mkdirSync(DIR, { recursive: true });
     if (db.processedLogs.length > 5000) db.processedLogs = db.processedLogs.slice(-4000);
     if (db.notifications.length > 500) db.notifications = db.notifications.slice(-400);
+    if (db.fundTx.length > 500) db.fundTx = db.fundTx.slice(-400);
     writeFileSync(FILE + '.tmp', JSON.stringify(db, null, 2));
     renameSync(FILE + '.tmp', FILE);
   }, 150);

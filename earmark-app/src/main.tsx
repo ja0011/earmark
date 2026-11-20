@@ -1,6 +1,6 @@
 import { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import './index.css';
 import { WalletProvider } from './lib/wallet';
 import { Toasts } from './components/Toasts';
@@ -8,7 +8,7 @@ import Landing from './pages/Landing';
 
 const Send = lazy(() => import('./pages/Send'));
 const GiftPage = lazy(() => import('./pages/Gift'));
-const Gifts = lazy(() => import('./pages/Gifts'));
+const Profile = lazy(() => import('./pages/Profile'));
 const Pay = lazy(() => import('./pages/Pay'));
 const Stores = lazy(() => import('./pages/Stores'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -22,7 +22,8 @@ function Shell() {
           <Route path="/" element={<Landing />} />
           <Route path="/send" element={<Send />} />
           <Route path="/gift/:id" element={<GiftPage />} />
-          <Route path="/gifts" element={<Gifts />} />
+          <Route path="/me" element={<Profile />} />
+          <Route path="/gifts" element={<Navigate to="/me" replace />} />
           <Route path="/pay" element={<Pay />} />
           <Route path="/stores" element={<Stores />} />
           <Route path="*" element={<NotFound />} />

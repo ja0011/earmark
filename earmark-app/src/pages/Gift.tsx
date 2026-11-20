@@ -292,7 +292,7 @@ export default function GiftPage() {
 
           {gift.status === 'Locked' && !pending && !isReceiver && (
             <p className="text-[16px] text-ink-soft">
-              Is this yours? <Link className="font-semibold text-seal underline" to="/gifts">See your gifts</Link>
+              Is this yours? <Link className="font-semibold text-seal underline" to="/me">See your gifts</Link>
             </p>
           )}
         </div>

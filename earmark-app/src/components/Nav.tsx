@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { formatUsdc } from 'earmark-plugin';
+import { useBalance } from '../lib/chain';
+import { useConfig } from '../lib/config';
 import { useWallet } from '../lib/wallet';
 
 const LINKS = [
@@ -14,6 +17,8 @@ export function Nav({ variant = 'app' }: { variant?: 'landing' | 'app' }) {
   const [open, setOpen] = useState(false);
   const { wallet } = useWallet();
   const loc = useLocation();
+  const cfg = useConfig();
+  const balance = useBalance(variant === 'app' ? cfg : null, wallet?.address);
 
   const [overDark, setOverDark] = useState(false);
 
@@ -42,7 +47,7 @@ export function Nav({ variant = 'app' }: { variant?: 'landing' | 'app' }) {
   const links = variant === 'landing' ? LINKS : [
     { href: '/send', label: 'Send' },
     { href: '/stores', label: 'For stores' },
-    ...(wallet ? [{ href: '/gifts', label: 'My gifts' }] : []),
+    ...(wallet ? [{ href: '/me', label: 'Profile' }] : []),
   ];
 
   const go = (href: string) => (e: React.MouseEvent) => {
@@ -82,8 +87,16 @@ export function Nav({ variant = 'app' }: { variant?: 'landing' | 'app' }) {
             </li>
           ))}
           {variant === 'app' && wallet && (
-            <li className="mono text-[15px] text-ink-soft" aria-label={`Signed in as ${wallet.name}`}>
-              {wallet.name} · {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
+            <li>
+              <Link
+                to="/me"
+                className="mono inline-flex items-center gap-2 rounded-full border border-rule bg-paper px-4 py-2 text-[15px] hover:border-ink/40"
+                aria-label={`Your profile: ${wallet.name}, balance ${balance === null ? 'loading' : formatUsdc(balance)}`}
+              >
+                <span className="font-sans font-semibold">{wallet.name}</span>
+                <span aria-hidden="true">·</span>
+                <span>{balance === null ? '—' : formatUsdc(balance)}</span>
+              </Link>
             </li>
           )}
         </ul>

@@ -1,4 +1,5 @@
-import { createPublicClient, createWalletClient, defineChain, http, type Hex, type PublicClient } from 'viem';
+import { useEffect, useState } from 'react';
+import { createPublicClient, createWalletClient, defineChain, erc20Abi, http, type Address, type Hex, type PublicClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { ARC_TESTNET } from 'earmark-plugin';
 import type { AppConfig } from './config';
@@ -41,4 +42,28 @@ export function chainMessage(e: unknown): string {
   if (/insufficient funds|exceeds balance|transfer amount exceeds/i.test(msg)) return 'Not enough USDC in this wallet. Top it up and try again.';
   if (/NotAllowedError|denied|cancel/i.test(msg)) return 'The passkey check was cancelled.';
   return msg.split('\n')[0];
+}
+
+/**
+ * Live USDC balance for an address (ERC-20 view of Arc's native USDC, 6 decimals).
+ * Re-reads every 15s and whenever `bump` changes (e.g. after a notification).
+ */
+export function useBalance(cfg: AppConfig | null, address: Address | undefined, bump = 0) {
+  const [balance, setBalance] = useState<bigint | null>(null);
+  useEffect(() => {
+    if (!cfg?.usdc || !address) return;
+    let alive = true;
+    const read = () =>
+      publicClient(cfg)
+        .readContract({ address: cfg.usdc as Address, abi: erc20Abi, functionName: 'balanceOf', args: [address] })
+        .then((b) => alive && setBalance(b as bigint))
+        .catch(() => {});
+    read();
+    const iv = setInterval(read, 15000);
+    return () => {
+      alive = false;
+      clearInterval(iv);
+    };
+  }, [cfg?.usdc, cfg?.chainId, address, bump]);
+  return balance;
 }
