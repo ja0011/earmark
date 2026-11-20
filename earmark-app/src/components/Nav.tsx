@@ -20,7 +20,7 @@ export function Nav({ variant = 'app' }: { variant?: 'landing' | 'app' }) {
   useEffect(() => {
     if (variant !== 'landing') return;
     const on = () => {
-      setScrolled(window.scrollY > window.innerHeight * 0.85);
+      setScrolled(window.scrollY > 8); // the hero is paper now, so the bar needs its backing as soon as text scrolls under it
       // Match the bar to the section under it: dark over Vault sections, paper over Receipt ones.
       const y = 34;
       const dark = [...document.querySelectorAll<HTMLElement>('[data-nav="dark"]')].some((el) => {

@@ -207,4 +207,4 @@ npm run register                # registers the store's signer on Arc through Ea
 
 ## Credits
 
-Every photo was generated with fal.ai (Nano Banana 2, BiRefNet): the wrapped present on the landing page and Hartwell Supply's storefront and products. Prompts are in `scripts/assets/jobs/`. Voices are ElevenLabs. Everything else (the see-through present effect, the gift card, receipts, fingerprint, store and contract) is built in code. Hartwell Supply, Maya and Alex are fictional.
+Every photo was generated with fal.ai (Nano Banana 2, BiRefNet): the upright wrapped present on the landing page and Hartwell Supply's storefront and products. Prompts are in `scripts/assets/jobs/`. Voices are ElevenLabs. Everything else (the see-through present effect, the gift card, receipts, fingerprint, store and contract) is built in code. Hartwell Supply, Maya and Alex are fictional.

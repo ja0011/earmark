@@ -33,27 +33,31 @@ export function Hero({ started, onFirstFrame }: { started: boolean; onFirstFrame
 
   return (
     <section ref={section} aria-labelledby="hero-title" className="bg-receipt text-ink">
-      <div className="mx-auto flex min-h-[100svh] max-w-[1320px] flex-col items-center justify-center px-5 pb-10 pt-[84px] text-center md:px-8">
-        <h1 id="hero-title" className="display" style={{ fontSize: 'clamp(4rem, 10vw, 10rem)' }}>
-          <span className="block overflow-hidden pb-[0.04em]"><span className="hero-line block">Money with a</span></span>
-          <span className="block overflow-hidden pb-[0.04em]"><span className="hero-line block">purpose.</span></span>
-        </h1>
-        <p className="hero-sub mt-5 max-w-[560px] text-balance text-[20px] leading-[1.45]">Send money that can only be spent on what you meant it for.</p>
+      <div className="mx-auto flex min-h-[100svh] max-w-[1320px] flex-col justify-center gap-10 px-5 pb-12 pt-[100px] md:flex-row md:items-center md:justify-between md:gap-10 md:px-8 md:pb-8 md:pt-[84px]">
+        <div className="max-w-[780px] md:w-[55%]">
+          <h1 id="hero-title" className="display" style={{ fontSize: 'clamp(4rem, 10vw, 10rem)' }}>
+            <span className="block overflow-hidden pb-[0.04em]"><span className="hero-line block">Money</span></span>
+            <span className="block overflow-hidden pb-[0.04em]"><span className="hero-line block">with a</span></span>
+            <span className="block overflow-hidden pb-[0.04em]"><span className="hero-line block">purpose.</span></span>
+          </h1>
+          <p className="hero-sub mt-6 max-w-[560px] text-balance text-[20px] leading-[1.45]">Send money that can only be spent on what you meant it for.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/send" className="hero-cta btn btn-seal">Send a gift</Link>
+            <a href="#how" onClick={scrollToHow} className="hero-cta btn btn-outline">See how it works</a>
+          </div>
+        </div>
 
-        <PresentReveal open={open} onReady={onFirstFrame} className="mt-6" />
-
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <div className="flex flex-col items-center md:w-[45%]">
+          <PresentReveal open={open} onReady={onFirstFrame} />
           <button
             type="button"
-            className="hero-cta btn btn-outline"
+            className="hero-cta btn btn-outline mt-4"
             aria-pressed={open}
             aria-controls="present-receipt"
             onClick={() => setOpen((o) => !o)}
           >
             {open ? 'Wrap it back up' : 'Show the receipt'}
           </button>
-          <Link to="/send" className="hero-cta btn btn-seal">Send a gift</Link>
-          <a href="#how" onClick={scrollToHow} className="hero-cta btn btn-outline">See how it works</a>
         </div>
       </div>
     </section>
