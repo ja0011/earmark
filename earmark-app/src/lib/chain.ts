@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { createPublicClient, createWalletClient, defineChain, erc20Abi, http, type Address, type Hex, type PublicClient } from 'viem';
+import { createPublicClient, createWalletClient, custom, defineChain, erc20Abi, http, type Address, type Hex, type PublicClient, type WalletClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { ARC_TESTNET } from 'earmark-plugin';
+import { ARC_TESTNET, formatUsdc } from 'earmark-plugin';
 import type { AppConfig } from './config';
 
 const rpc = () => `${window.location.origin}/api/rpc`;
@@ -19,8 +19,61 @@ export function publicClient(cfg: AppConfig): PublicClient {
   return client;
 }
 
-export function walletFor(cfg: AppConfig, privateKey: Hex) {
+export function walletFor(cfg: AppConfig, privateKey: Hex): WalletClient {
   return createWalletClient({ account: privateKeyToAccount(privateKey), chain: chainOf(cfg), transport: http(rpc()) });
+}
+
+// ---------------------------------------------------------------- injected wallets (MetaMask)
+
+export type Eip1193 = {
+  request: (args: { method: string; params?: unknown[] | Record<string, unknown> }) => Promise<any>;
+  on?: (event: string, fn: (...args: any[]) => void) => void;
+  removeListener?: (event: string, fn: (...args: any[]) => void) => void;
+  isMetaMask?: boolean;
+  providers?: Eip1193[];
+};
+
+/** The browser's wallet extension, preferring MetaMask when several are installed. */
+export function injected(): Eip1193 | null {
+  const eth = (window as any).ethereum as Eip1193 | undefined;
+  if (!eth) return null;
+  return eth.providers?.find((p) => p.isMetaMask) ?? eth;
+}
+
+/** Switch the wallet to Arc testnet, adding it first if the wallet doesn't know it yet. */
+export async function ensureArc(provider: Eip1193, cfg: AppConfig) {
+  const chainId = `0x${cfg.chainId.toString(16)}`;
+  const current = await provider.request({ method: 'eth_chainId' }).catch(() => null);
+  if (typeof current === 'string' && parseInt(current, 16) === cfg.chainId) return;
+  try {
+    await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] });
+  } catch (e: any) {
+    const unknown = e?.code === 4902 || e?.data?.originalError?.code === 4902 || /unrecognized|not been added|unknown chain/i.test(e?.message ?? '');
+    if (!unknown) throw e;
+    await provider.request({
+      method: 'wallet_addEthereumChain',
+      params: [
+        {
+          chainId,
+          chainName: cfg.chainId === ARC_TESTNET.id ? 'Arc Testnet' : `Chain ${cfg.chainId}`,
+          nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
+          rpcUrls: [ARC_TESTNET.rpcUrls.default.http[0]],
+          blockExplorerUrls: [cfg.explorer],
+        },
+      ],
+    });
+  }
+}
+
+/** A viem wallet client that signs through the browser wallet (MetaMask asks to confirm every transaction). */
+export function injectedWalletFor(cfg: AppConfig, provider: Eip1193, address: Address): WalletClient {
+  return createWalletClient({ account: address, chain: chainOf(cfg), transport: custom(provider) });
+}
+
+/** Balance for people: cents from $1 up, four decimals below $1 so small test amounts don't read as zero. */
+export function formatBalance(v: bigint): string {
+  if (v >= 1_000_000n) return formatUsdc(v);
+  return `$${(Number(v) / 1_000_000).toFixed(4)}`;
 }
 
 /** Human message for a viem error. */

@@ -21,7 +21,7 @@ const priceText = (p?: string) => {
 /** The Earmark pay popup, opened by EarmarkPayButton from a store's checkout. */
 export default function Pay() {
   const cfg = useConfig();
-  const { wallet, authorize } = useWallet();
+  const { wallet, signer } = useWallet();
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const storeParam = params.get('store') ?? '';
   const openerOrigin = useMemo(() => {
@@ -120,8 +120,8 @@ export default function Pay() {
     setError(null);
     try {
       setStep('passkey');
-      const key = await authorize(`redeem:${gift.id}`);
-      const r = await redeemWithStore({ cfg, privateKey: key, giftId: gift.id, receiver: wallet.address, signUrl, cart, onStep: setStep });
+      const w = await signer(`redeem:${gift.id}`);
+      const r = await redeemWithStore({ cfg, wallet: w, giftId: gift.id, receiver: wallet.address, signUrl, cart, onStep: setStep });
       paidRef.current = true;
       setPaid(r);
       post({ type: 'earmark:paid', ...r });
@@ -229,7 +229,7 @@ export default function Pay() {
             {gift && !mismatch && (
               <button type="button" className="btn btn-seal w-full text-[18px]" onClick={pay} disabled={!!step || !cart || !signUrl || signMismatch || !cfg?.ready}>
                 {step === 'passkey'
-                  ? 'Confirm with your passkey…'
+                  ? (wallet?.kind === 'metamask' ? 'Confirm in MetaMask…' : 'Confirm with your passkey…')
                   : step === 'signing'
                     ? `${storeName} is signing…`
                     : step === 'sending' || step === 'confirming'

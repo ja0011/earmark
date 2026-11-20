@@ -6,7 +6,7 @@ import { AppLayout } from '../components/AppLayout';
 import { SignIn } from '../components/SignIn';
 import { Notice } from '../components/Tx';
 import { api, ApiError } from '../lib/api';
-import { useBalance } from '../lib/chain';
+import { formatBalance, useBalance } from '../lib/chain';
 import { addressUrl, txUrl, useConfig } from '../lib/config';
 import { sentence, type GiftView } from '../lib/gifts';
 import { useWallet } from '../lib/wallet';
@@ -135,7 +135,7 @@ export default function Profile() {
     return (
       <AppLayout title="Profile">
         <h1 className="display text-[clamp(2.75rem,6vw,5rem)]">Your Earmark.</h1>
-        <p className="mt-4 max-w-[560px] text-[19px] leading-[1.5] text-ink-soft">Sign in to see your balance, your gifts and everything that happened to them.</p>
+        <p className="mt-4 max-w-[560px] text-[19px] leading-[1.5] text-ink-soft">Use a passkey or connect MetaMask to see your balance, your gifts and everything that happened to them.</p>
         <div className="mt-8 max-w-[760px]">
           <SignIn />
         </div>
@@ -162,9 +162,9 @@ export default function Profile() {
             </a>
           </div>
           <p className="mt-1 text-[16px] text-ink-soft">
-            Signed in with your passkey ·{' '}
+            {wallet.kind === 'metamask' ? 'Connected with MetaMask' : 'Signed in with your passkey'} ·{' '}
             <button type="button" onClick={signOut} className="font-semibold text-ink underline underline-offset-4">
-              Switch person
+              {wallet.kind === 'metamask' ? 'Disconnect' : 'Switch person'}
             </button>
           </p>
         </div>
@@ -181,8 +181,8 @@ export default function Profile() {
           {/* Balance */}
           <section aria-labelledby="balance-title" className="rounded-[20px] border border-rule bg-paper p-6 md:p-8">
             <h2 id="balance-title" className="text-[17px] font-semibold text-ink-soft">Balance</h2>
-            <p className="mono mt-2 text-[clamp(2.75rem,7vw,4.25rem)] font-medium leading-none tracking-[-0.02em]" aria-live="polite">
-              {balance === null ? '—' : formatUsdc(balance)}
+            <p className="mono mt-2 text-[clamp(2.75rem,7vw,4.25rem)] font-medium leading-none tracking-[-0.02em]" aria-live="polite" title={balance === null ? undefined : `${(Number(balance) / 1_000_000).toFixed(6)} USDC`}>
+              {balance === null ? '—' : formatBalance(balance)}
             </p>
             <p className="mt-2 text-[16px] text-ink-soft">USDC on Arc · yours to spend</p>
             <dl className="mt-6 grid gap-4 border-t border-dashed border-rule pt-5 sm:grid-cols-2">
@@ -206,6 +206,13 @@ export default function Profile() {
               </button>
             </div>
             {fundMsg && <p className="mt-3 text-[16px] text-ink-soft" role="status">{fundMsg}</p>}
+            <p className="mt-3 text-[16px] text-ink-soft">
+              Need more? Get Arc Testnet USDC at{' '}
+              <a href="https://faucet.circle.com" target="_blank" rel="noreferrer" className="font-semibold text-seal underline underline-offset-4">
+                faucet.circle.com
+              </a>
+              .
+            </p>
           </section>
 
           {/* Gifts */}

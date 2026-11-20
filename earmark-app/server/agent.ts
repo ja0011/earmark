@@ -1,11 +1,11 @@
 // The send agent: turns "Send Alex $45 for a snow shovel at Hartwell Supply." into a gift the sender reviews.
 // Claude (tool use) when ANTHROPIC_API_KEY is set; a deterministic parser otherwise, so the demo never breaks.
 import Anthropic from '@anthropic-ai/sdk';
-import { encodeAbiParameters, keccak256, zeroAddress, type Address, type Hex } from 'viem';
+import { encodeAbiParameters, getAddress, isAddress, keccak256, zeroAddress, type Address, type Hex } from 'viem';
 import { parseUsdc, formatUsdc } from 'earmark-plugin';
 import { AGENT_MODEL, ANTHROPIC_API_KEY } from './config';
 import { nextGiftId } from './chain';
-import { catalogFor, contactByName, publicContact, storeByName, type CatalogItem } from './directory';
+import { catalogFor, contactByAddress, contactByName, publicContact, storeByName, type CatalogItem } from './directory';
 import { db } from './db';
 
 export class AgentError extends Error {
@@ -183,7 +183,12 @@ export async function parseGift(text: string, sender?: Address) {
   }
 
   // Everything below is resolved from Earmark's own records. The model only picks names.
-  const contact = contactByName(draft.receiverName);
+  // A wallet address in the text wins over any name (MetaMask users can send to each other directly).
+  const typed = text.match(/0x[a-fA-F0-9]{40}/)?.[0];
+  const contact: { name: string; address: Address } | undefined =
+    typed && isAddress(typed)
+      ? { name: contactByAddress(typed)?.name ?? `${typed.slice(0, 6)}…${typed.slice(-4)}`, address: getAddress(typed) }
+      : contactByName(draft.receiverName);
   if (!contact) {
     throw new AgentError(422, 'NO_CONTACT', draft.receiverName ? `I can't find ${draft.receiverName} in your contacts yet. Ask them to open Earmark and sign in once.` : "Who's it for? Try a name, like Alex.");
   }

@@ -11,7 +11,7 @@ import { SignIn } from '../components/SignIn';
 import { Notice, TxLink } from '../components/Tx';
 import { api } from '../lib/api';
 import { useConfig } from '../lib/config';
-import { chainMessage, publicClient, walletFor } from '../lib/chain';
+import { chainMessage, publicClient } from '../lib/chain';
 import { redeemWithStore, sentence, useCountdown, useGift } from '../lib/gifts';
 import { useWallet } from '../lib/wallet';
 
@@ -21,7 +21,7 @@ export default function GiftPage() {
   const { id } = useParams();
   const cfg = useConfig();
   const { gift, error, reload } = useGift(id);
-  const { wallet, authorize } = useWallet();
+  const { wallet, signer } = useWallet();
   const cd = useCountdown(gift?.expiry);
   const [requests, setRequests] = useState<PR[]>([]);
   const [call, setCall] = useState<{ mode: 'phone' | 'live' | 'browser' | 'demo'; message: string } | null>(null);
@@ -89,10 +89,10 @@ export default function GiftPage() {
     setBuyError(null);
     try {
       setBuying('passkey');
-      const key = await authorize(`redeem:${gift.id}`);
+      const w = await signer(`redeem:${gift.id}`);
       const r = await redeemWithStore({
         cfg,
-        privateKey: key,
+        wallet: w,
         giftId: gift.id,
         receiver: wallet.address,
         signUrl: gift.signUrl,
@@ -120,10 +120,9 @@ export default function GiftPage() {
     setRefunding(true);
     setBuyError(null);
     try {
-      const key = await authorize(`refund:${gift.id}`);
+      const w = await signer(`refund:${gift.id}`);
       const pub = publicClient(cfg);
-      const w = walletFor(cfg, key);
-      const { request } = await pub.simulateContract({ account: w.account, address: cfg.earmark, abi: earmarkAbi, functionName: 'refund', args: [BigInt(gift.id)] });
+      const { request } = await pub.simulateContract({ account: w.account!, address: cfg.earmark, abi: earmarkAbi, functionName: 'refund', args: [BigInt(gift.id)] });
       const hash = await w.writeContract(request);
       await pub.waitForTransactionReceipt({ hash });
       reload();
@@ -244,7 +243,7 @@ export default function GiftPage() {
               {isReceiver && (
                 <div className="mt-5 flex flex-wrap gap-3">
                   <button type="button" className="btn btn-seal" onClick={() => confirmBuy(pending)} disabled={!!buying}>
-                    {buying === 'passkey' ? 'Confirm with your passkey…' : buying === 'signing' ? `${storeName} is signing…` : buying === 'sending' || buying === 'confirming' ? 'Paying on Arc…' : 'Confirm with passkey'}
+                    {buying === 'passkey' ? (wallet?.kind === 'metamask' ? 'Confirm in MetaMask…' : 'Confirm with your passkey…') : buying === 'signing' ? `${storeName} is signing…` : buying === 'sending' || buying === 'confirming' ? 'Paying on Arc…' : 'Confirm with passkey'}
                   </button>
                   <button type="button" className="btn btn-outline" onClick={() => decline(pending)} disabled={!!buying}>
                     Not now

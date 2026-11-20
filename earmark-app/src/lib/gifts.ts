@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { decodeEventLog, getAddress, type Address, type Hex } from 'viem';
+import { decodeEventLog, getAddress, type Address, type Hex, type WalletClient } from 'viem';
 import { earmarkAbi, type CartLine, type SignedOrder } from 'earmark-plugin';
 import { api } from './api';
 import type { AppConfig } from './config';
-import { publicClient, walletFor } from './chain';
+import { publicClient } from './chain';
 
 export type GiftView = {
   id: string;
@@ -65,14 +65,15 @@ export type RedeemResult = { txHash: Hex; giftId: string; price: string; change:
 /** POST the cart to the store's signer, then call redeem from the receiver's wallet. */
 export async function redeemWithStore(opts: {
   cfg: AppConfig;
-  privateKey: Hex;
+  /** From useWallet().signer(): a passkey wallet or MetaMask. */
+  wallet: WalletClient;
   giftId: string;
   receiver: Address;
   signUrl: string;
   cart: CartLine[];
   onStep?: (s: 'signing' | 'sending' | 'confirming') => void;
 }): Promise<RedeemResult> {
-  const { cfg, privateKey, giftId, receiver, signUrl, cart, onStep } = opts;
+  const { cfg, wallet, giftId, receiver, signUrl, cart, onStep } = opts;
   if (!cfg.earmark) throw new Error('Earmark is not deployed yet.');
   onStep?.('signing');
   const res = await fetch(signUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ giftId, receiver, cart: cart.map((l) => ({ sku: l.sku, qty: l.qty })) }) });
@@ -85,10 +86,9 @@ export async function redeemWithStore(opts: {
   if (order.giftId !== giftId) throw Object.assign(new Error('The store signed a different gift.'), { code: 'WRONG_GIFT' });
 
   const pub = publicClient(cfg);
-  const wallet = walletFor(cfg, privateKey);
   onStep?.('sending');
   const { request } = await pub.simulateContract({
-    account: wallet.account,
+    account: wallet.account!,
     address: cfg.earmark,
     abi: earmarkAbi,
     functionName: 'redeem',

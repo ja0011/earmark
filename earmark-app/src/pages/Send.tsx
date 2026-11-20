@@ -9,7 +9,7 @@ import { SignIn } from '../components/SignIn';
 import { Notice, TxLink } from '../components/Tx';
 import { api, ApiError } from '../lib/api';
 import { addressUrl, useConfig } from '../lib/config';
-import { chainMessage, publicClient, walletFor } from '../lib/chain';
+import { chainMessage, publicClient } from '../lib/chain';
 import { sentence } from '../lib/gifts';
 import { useWallet } from '../lib/wallet';
 
@@ -28,7 +28,7 @@ const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 export default function Send() {
   const cfg = useConfig();
-  const { wallet, authorize } = useWallet();
+  const { wallet, signer } = useWallet();
   const [text, setText] = useState(EXAMPLE);
   const [parsing, setParsing] = useState(false);
   const [parsed, setParsed] = useState<Parsed | null>(null);
@@ -86,19 +86,18 @@ export default function Send() {
     if (!cfg?.ready || !cfg.earmark || !cfg.usdc || !parsed || !wallet) return;
     setError(null);
     if (parsed.receiver.address.toLowerCase() === wallet.address.toLowerCase()) {
-      setError("You can't send a gift to yourself. Switch to Maya to send it.");
+      setError("You can't send a gift to yourself. Sign in as the sender instead.");
       return;
     }
     try {
       setStep('passkey');
-      const key = await authorize(`lock:${parsed.item.itemId}:${parsed.amount}`);
+      const w = await signer(`lock:${parsed.item.itemId}:${parsed.amount}`);
       const pub = publicClient(cfg);
-      const w = walletFor(cfg, key);
       const amount = BigInt(parsed.amount);
       const allowance = (await pub.readContract({ address: cfg.usdc, abi: erc20Abi, functionName: 'allowance', args: [wallet.address, cfg.earmark] })) as bigint;
       if (allowance < amount) {
         setStep('approve');
-        const { request } = await pub.simulateContract({ account: w.account, address: cfg.usdc, abi: erc20Abi, functionName: 'approve', args: [cfg.earmark, amount] });
+        const { request } = await pub.simulateContract({ account: w.account!, address: cfg.usdc, abi: erc20Abi, functionName: 'approve', args: [cfg.earmark, amount] });
         const approveHash = await w.writeContract(request);
         setTxs((t) => ({ ...t, approve: approveHash }));
         const r = await pub.waitForTransactionReceipt({ hash: approveHash, timeout: 90_000 });
@@ -108,7 +107,7 @@ export default function Send() {
       // Expiry: 30 days from now (the review card showed the same window).
       const expiry = BigInt(Math.max(parsed.expiry, Math.floor(Date.now() / 1000) + 30 * 86400 - 600));
       const { request } = await pub.simulateContract({
-        account: w.account,
+        account: w.account!,
         address: cfg.earmark,
         abi: earmarkAbi,
         functionName: 'createGift',
@@ -230,9 +229,9 @@ export default function Send() {
                   </p>
                 )}
                 <button type="button" className="btn btn-seal w-full text-[18px]" onClick={lock} disabled={!wallet || busy || !cfg?.ready || short_of}>
-                  {step === 'passkey' ? 'Confirm with your passkey…' : step === 'approve' ? 'Approving USDC…' : step === 'lock' ? 'Locking on Arc…' : step === 'confirm' ? 'Waiting for Arc…' : 'Lock it'}
+                  {step === 'passkey' ? (wallet?.kind === 'metamask' ? 'Confirm in MetaMask…' : 'Confirm with your passkey…') : step === 'approve' ? (wallet?.kind === 'metamask' ? 'Approve USDC in MetaMask…' : 'Approving USDC…') : step === 'lock' ? (wallet?.kind === 'metamask' ? 'Confirm the lock in MetaMask…' : 'Locking on Arc…') : step === 'confirm' ? 'Waiting for Arc…' : 'Lock it'}
                 </button>
-                {!wallet && <p className="text-[16px] text-ink-soft">Sign in first. Your passkey approves the payment.</p>}
+                {!wallet && <p className="text-[16px] text-ink-soft">Sign in first. Your passkey or MetaMask approves the payment.</p>}
                 {txs.approve && <TxLink hash={txs.approve} label="USDC approval" />}
                 {txs.create && <TxLink hash={txs.create} label="createGift" />}
               </div>

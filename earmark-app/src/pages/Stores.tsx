@@ -183,7 +183,7 @@ app.use(earmarkRouter({
   );
 
   return (
-    <AppLayout title="For stores">
+    <AppLayout title="For stores" variant="stores">
       <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-end">
         <div>
           <h1 className="display" style={{ fontSize: 'clamp(3rem, 7vw, 6.5rem)' }}>
