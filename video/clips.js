@@ -1,0 +1,1 @@
+window.CLIPS = {"present":{"frames":121,"fps":24,"from":0,"source":"present-clip.mp4"},"usecase":{"frames":121,"fps":24,"from":0,"source":"usecase-clip.mp4"},"coins":{"frames":92,"fps":24,"from":0.4,"source":"coins-clip.mp4"},"store":{"frames":121,"fps":24,"from":0,"source":"store-clip.mp4"}};

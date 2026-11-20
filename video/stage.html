@@ -108,29 +108,24 @@ svg.icon { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: 
 
   <!-- S1 WHAT IT IS -->
   <section class="scene light" id="s1">
-    <div class="abs" id="present" style="left:250px; top:96px; width:590px; height:830px">
-      <img id="wrapImg" src="../earmark-app/public/media/present-upright-1280.webp" style="position:absolute; inset:0; width:590px; height:830px; filter:drop-shadow(0 30px 42px rgba(18,18,18,.22))">
-      <div id="face" class="abs" style="left:0.6%; top:22.6%; width:98.8%; height:76.6%">
-        <div id="pReceipt" class="mono abs" style="inset:0; border-radius:8px; background:var(--paper); padding:0 9%; display:flex; flex-direction:column; justify-content:center; font-size:27px; line-height:1.7; --x:0px; --y:0px; --r:0px;
-          -webkit-mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 0, #000 calc(var(--r) * 0.82), transparent var(--r));">
-          <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:18px; margin-bottom:14px" class="dash-b">
-            <span style="font:800 34px/1 var(--display); letter-spacing:-.02em">EARMARK</span>
-            <div class="lock" id="pLock" style="width:62px; height:62px"></div>
-          </div>
-          <div class="dash" style="margin-bottom:12px"></div>
-          <div class="row"><span>ITEM</span><span class="dots"></span><span>SNOW SHOVEL</span></div>
-          <div class="row"><span>STORE</span><span class="dots"></span><span>HARTWELL SUPPLY</span></div>
-          <div class="row"><span>FOR</span><span class="dots"></span><span>ALEX</span></div>
-          <div class="row"><span>AMOUNT</span><span class="dots"></span><span>$45.00</span></div>
-          <div class="dash" style="margin:14px 0 10px"></div>
-          <div class="row" style="font-weight:700"><span>STATUS</span><span class="dots"></span><span id="pStatus">LOCKED</span></div>
-        </div>
+    <div class="abs" id="presClip" style="left:0; top:0; width:1140px; height:1080px; -webkit-mask-image:radial-gradient(ellipse 500px 560px at 560px 520px, #000 74%, transparent 100%)"></div>
+    <div class="abs mono" id="pCard" style="left:330px; top:225px; width:480px; padding:34px 36px 44px; background:var(--paper); border-radius:14px; font-size:25px; line-height:1.75; box-shadow:0 40px 80px -30px rgba(18,18,18,.5)">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:16px">
+        <span style="font:800 32px/1 var(--display); letter-spacing:-.02em">EARMARK</span>
+        <div class="lock" id="pLock" style="width:58px; height:58px"></div>
       </div>
+      <div class="dash" style="margin-bottom:10px"></div>
+      <div class="row"><span>ITEM</span><span class="dots"></span><span>SNOW SHOVEL</span></div>
+      <div class="row"><span>STORE</span><span class="dots"></span><span>HARTWELL SUPPLY</span></div>
+      <div class="row"><span>FOR</span><span class="dots"></span><span>ALEX</span></div>
+      <div class="row"><span>AMOUNT</span><span class="dots"></span><span>$45.00</span></div>
+      <div class="dash" style="margin:12px 0 8px"></div>
+      <div class="row" style="font-weight:700"><span>STATUS</span><span class="dots"></span><span id="pStatus">LOCKED</span></div>
     </div>
-    <h1 class="display abs" id="s1Head" style="left:980px; top:190px; font-size:168px; width:900px">
+    <h1 class="display abs" id="s1Head" style="left:1080px; top:200px; font-size:150px; width:820px">
       <div class="ln"><span>Money</span></div><div class="ln"><span>with a</span></div><div class="ln"><span>purpose.</span></div>
     </h1>
-    <div class="abs" id="ones" style="left:984px; top:730px; display:flex; gap:16px">
+    <div class="abs" id="ones" style="left:1084px; top:700px; display:flex; gap:16px">
       <div class="tag one" style="font-size:22px; padding:12px 20px">ONE ITEM</div>
       <div class="tag one" style="font-size:22px; padding:12px 20px">ONE STORE</div>
       <div class="tag one" style="font-size:22px; padding:12px 20px">ONE PERSON</div>
@@ -200,6 +195,7 @@ svg.icon { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: 
 <script src="gsap.min.js"></script>
 <script src="voice.js"></script>
 <script src="captures/stores-rects.js"></script>
+<script src="clips.js"></script>
 <script>
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -282,6 +278,29 @@ const ring = (parent, x, y, at, color = 'rgba(47,107,255,.9)', size = 60) => {
 };
 const typer = (node, text, at, dur) => { const p = { n: 0 }; node.textContent = ''; tl.to(p, { n: text.length, duration: dur, ease: 'none', onUpdate: () => { node.textContent = text.slice(0, Math.round(p.n)); } }, at); };
 
+/* ---------------- fal.ai clips as frame sequences ---------------- */
+const CLIPS = window.CLIPS || {};
+const LAYERS = [];
+const pad3 = (n) => String(n).padStart(3, '0');
+/** A clip from video/clips/<name>/ (native 24 fps). Source time = from + (t - t0) * rate; two stacked frames are
+ *  blended by the fractional part so slow motion stays smooth. seek() waits for both frames to decode. */
+function clipLayer(parent, name, { t0, rate = 1, from = 0, style = '', imgStyle = '' }) {
+  const box = el('div', { style: `position:absolute; overflow:hidden; ${style}` }, parent);
+  const meta = CLIPS[name];
+  if (!meta) { console.warn('missing clip', name); return box; }
+  const css = `position:absolute; left:0; top:0; width:100%; height:100%; object-fit:cover; ${imgStyle}`;
+  const A = el('img', { style: css }, box), B = el('img', { style: css }, box);
+  const src = (i) => `clips/${name}/f${pad3(i + 1)}.jpg`;
+  const set = (img, s) => { if (img.getAttribute('src') === s) return null; img.src = s; return img.decode().catch(() => { if (img.getAttribute('src') === s) console.warn('frame failed', s); }); };
+  LAYERS.push((t) => {
+    const f = Math.min(meta.frames - 1, Math.max(0, (from + (t - t0) * rate) * meta.fps));
+    const i0 = Math.floor(f), i1 = Math.min(meta.frames - 1, i0 + 1);
+    B.style.opacity = (f - i0).toFixed(3);
+    return [set(A, src(i0)), set(B, src(i1))];
+  });
+  return box;
+}
+
 /* ---------------- S0 PROBLEM ---------------- */
 {
   const t0 = 0.35;
@@ -306,32 +325,26 @@ const typer = (node, text, at, dur) => { const p = { n: 0 }; node.textContent = 
 /* ---------------- S1 WHAT IT IS ---------------- */
 {
   const a = T.s1;
-  const rc = $('#pReceipt');
-  const FW = 590 * 0.988, FH = 830 * 0.766;
-  const fl = { x: -60, y: FH * 0.25, r: 0 };
-  const applyFl = () => { rc.style.setProperty('--x', fl.x + 'px'); rc.style.setProperty('--y', fl.y + 'px'); rc.style.setProperty('--r', fl.r + 'px'); };
-  applyFl();
-  tl.from('#present', { y: 50, autoAlpha: 0, duration: 0.9 }, a + 0.05);
+  // fal.ai clip: the ribbon slides off and the lid lifts to a glow (scaled 0.86, present centred at x 570, edges feathered)
+  const pc = clipLayer($('#presClip'), 'present', { t0: a, rate: 1.3, style: 'inset:0', imgStyle: 'left:-256px; top:40px; width:1651px; height:929px' });
+  tl.fromTo('#presClip', { scale: 1 }, { scale: 1.04, duration: T.s2 - a, ease: 'none', transformOrigin: '50% 60%' }, a);
   $$('#s1Head .ln').forEach((ln) => { ln.style.overflow = 'hidden'; ln.style.paddingBottom = '6px'; });
   tl.from('#s1Head .ln > span', { yPercent: 105, duration: 0.8, stagger: 0.09, ease: 'power4.out' }, W(1, 'earmark') + 0.1);
   $$('#s1Head .ln > span').forEach((s) => (s.style.display = 'inline-block'));
-  // flashlight glides across the front
-  tl.to(fl, { r: 150, duration: 0.4, ease: 'back.out(1.6)', onUpdate: applyFl }, a + 0.55);
-  tl.to(fl, { keyframes: [{ x: FW * 0.3, y: FH * 0.36, duration: 0.7 }, { x: FW * 0.66, y: FH * 0.55, duration: 0.7 }, { x: FW * 0.5, y: FH * 0.5, duration: 0.5 }], ease: 'sine.inOut', onUpdate: applyFl }, a + 0.55);
-  cue(a + 0.7, 'tick', 0.3);
-  const open = W(1, 'item,') - 0.15;
-  tl.to(fl, { r: Math.hypot(FW, FH) / 2 / 0.8 + 10, duration: 0.7, ease: 'power3.inOut', onUpdate: applyFl }, open);
-  tl.to('#wrapImg', { autoAlpha: 0, y: -40, scale: 0.97, duration: 0.6, ease: 'power2.in' }, open + 0.4);
-  tl.to(rc, { boxShadow: '0 40px 70px -30px rgba(18,18,18,.45)', duration: 0.6 }, open + 0.5);
+  // the receipt rises out of the glowing box
+  const tE = W(1, 'person.') - 0.8;
+  tl.fromTo('#pCard', { autoAlpha: 0, y: 300, scale: 0.3, transformOrigin: '50% 100%' }, { autoAlpha: 1, y: 0, scale: 1, duration: 0.7, ease: 'back.out(1.3)' }, tE);
+  tl.to('#presClip', { opacity: 0.55, duration: 0.6 }, tE + 0.2);
+  cue(tE + 0.1, 'tick', 0.45);
   tl.set('#pLock', { autoAlpha: 0 }, a);
-  lockSnap($('#pLock'), W(1, 'person.') - 0.2);
-  tl.fromTo('#pStatus', { color: '#121212' }, { color: '#2F6BFF', duration: 0.3 }, W(1, 'person.') + 0.1);
+  lockSnap($('#pLock'), W(1, 'person.') - 0.15);
+  tl.fromTo('#pStatus', { color: '#121212' }, { color: '#2F6BFF', duration: 0.3 }, W(1, 'person.') + 0.15);
   // "one item, one store, one person"
   ['item,', 'store,', 'person.'].forEach((w, i) => {
     const t = W(1, w) - 0.05;
     tl.from($$('#ones .one')[i], { autoAlpha: 0, y: 18, duration: 0.4, ease: 'back.out(2)' }, t);
   });
-  tl.to('#present', { y: -8, duration: 2.5, ease: 'sine.inOut' }, a + 1.5);
+  tl.to('#pCard', { y: -10, duration: 2, ease: 'sine.inOut' }, tE + 0.8);
 }
 
 /* ---------------- S2 USE CASES ---------------- */
@@ -349,6 +362,13 @@ const ICONS = {
     ['work', 'WORK', 'LEARNING BOOKS', 'PINE CONE BOOKS', 'THE DESIGN TEAM', '$100.00', W(2, 'budgets')],
   ];
   const wrap = $('#cards');
+  // fal.ai clip behind the cards: the gift objects, slowed to fill the scene, under a cream wash
+  const uc = clipLayer($('#s2'), 'usecase', { t0: T.s2, rate: 0.56, style: 'inset:0; z-index:0' });
+  const wash = el('div', { style: 'position:absolute; inset:0; z-index:0; background:rgba(245,242,235,.42)' }, $('#s2'));
+  $('#s2').append(wrap);
+  wrap.style.cssText = 'position:absolute; inset:0; z-index:1';
+  tl.fromTo(uc, { scale: 1.0 }, { scale: 1.08, duration: T.s3 - T.s2 + 0.8, ease: 'none' }, T.s2);
+  tl.fromTo(wash, { opacity: 0 }, { opacity: 1, duration: 1.2, ease: 'power1.inOut' }, T.s2 + 0.5);
   const rot = [-3, 1.8, -1.4, 2.6], ys = [260, 310, 245, 295];
   data.forEach(([ic, tag, item, store, who, amt, at], i) => {
     const c = el('div', { class: 'card mono zig', style: `left:${92 + i * 436}px; top:${ys[i]}px; z-index:${i + 1}` }, wrap);
@@ -447,20 +467,23 @@ let chipOn = null;
   cam.to(tRc, 760, 470, 1.42, 0.8);
   const hi = el('div', { style: 'position:absolute; left:500px; top:518px; width:440px; height:30px; background:rgba(242,183,5,.38); border-radius:4px; transform-origin:0 50%; z-index:10; mix-blend-mode:multiply' }, cam.layer);
   tl.fromTo(hi, { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'power2.out' }, tRc + 0.3);
-  // coins drop next to the receipt
-  const pile = el('div', { style: 'position:absolute; left:985px; top:500px; width:90px; height:120px; z-index:11' }, cam.layer);
-  for (let i = 0; i < 5; i++) {
-    const c = el('span', { style: `position:absolute; left:${(i % 2) * 4 - 2}px; bottom:${i * 11}px; width:86px; height:26px; border-radius:50%; background:#F2B705; border:2.5px solid #C99600; box-shadow:inset 0 -4px 0 #D9A400; z-index:${i}` }, pile);
-    const t = tRc + 0.45 + i * 0.17;
-    tl.fromTo(c, { y: -460, autoAlpha: 0, rotate: 18 * (i % 2 ? 1 : -1) }, { y: 0, autoAlpha: 1, rotate: 0, duration: 0.5, ease: 'bounce.out' }, t);
-    if (i % 2 === 0) cue(t + 0.36, 'coin', 0.5);
-  }
-  const plus = el('div', { class: 'mono', style: 'position:absolute; left:968px; top:430px; font-size:30px; font-weight:700; color:#121212; background:#F2B705; padding:6px 14px; border-radius:10px; z-index:12', html: '+$0.05' }, cam.layer);
-  tl.from(plus, { autoAlpha: 0, y: 16, duration: 0.4, ease: 'back.out(2)' }, tRc + 1.4);
+  // fal.ai clip: gold coins drop onto a blank receipt; we print the change line on the paper
+  const tC = tRc + 0.75;
+  const coins = clipLayer(s3, 'coins', { t0: tC, from: 0.3, rate: 1.4, style: 'inset:0; z-index:8; opacity:0; visibility:hidden' });
+  const slip = el('div', { class: 'mono', style: 'position:absolute; left:828px; top:150px; width:264px; font-size:19px; line-height:1.7; color:#1d1d1b; mix-blend-mode:multiply', html:
+    '<div style="text-align:center; font:800 25px/1.2 var(--display); letter-spacing:-.02em; padding-bottom:10px">HARTWELL SUPPLY</div><div class="dash" style="margin-bottom:8px; border-color:#cfc8b8"></div>' +
+    '<div class="row"><span>SNOW SHOVEL</span><span class="dots"></span><span>$0.40</span></div>' +
+    '<div class="row"><span>PAID</span><span class="dots"></span><span>$0.40</span></div>' +
+    '<div class="row" style="font-weight:700; background:rgba(242,183,5,.55); margin:2px -6px 0; padding:0 6px; border-radius:3px"><span>CHANGE TO ALEX</span><span class="dots"></span><span>$0.05</span></div>' }, coins);
+  tl.fromTo(coins, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: 'power1.inOut' }, tC);
+  tl.from($$(':scope > *', slip), { autoAlpha: 0, y: -6, duration: 0.15, stagger: 0.09 }, tC + 0.15);
+  cue(tC + 0.15, 'tick', 0.4);
+  [1.07, 1.36, 1.64].forEach((d) => cue(tC + d, 'coin', 0.55));
   // Alex's profile: "You kept $0.05 change."
   const tProf = LEND(3) + 1.25;
   cross(imgs.receipt, imgs.prof, tProf, 0.35);
-  tl.set([hi, pile, plus], { autoAlpha: 0 }, tProf + 0.2);
+  tl.to(coins, { autoAlpha: 0, duration: 0.3 }, tProf - 0.05);
+  tl.set(hi, { autoAlpha: 0 }, tProf + 0.2);
   cam.to(tProf, 1000, 400, 1.6, 1.4);
   chipOn = a + 0.4;
 }
@@ -470,15 +493,20 @@ let chipOn = null;
   const a = T.s4;
   const s4 = $('#s4');
   const R = window.STORES_RECTS;
+  // fal.ai clip: establishing shot of a shop counter, then it stays as a dark backdrop
+  clipLayer(s4, 'store', { t0: a, rate: 0.5, style: 'inset:0; z-index:0' });
+  const dwash = el('div', { style: 'position:absolute; inset:0; z-index:0; background:#15171C; opacity:0' }, s4);
   const { lp, screen } = laptop(s4, 332, 66);
+  lp.style.zIndex = 2;
   const cam = camera(screen, R.page.h);
   cam.shot('captures/d-stores-full.png');
-  tl.from(lp, { y: 60, duration: 0.9 }, a);
-  cam.set(a, 720, 450, 1);
+  const tUp = a + 0.85;
+  tl.fromTo(lp, { y: 1000 }, { y: 0, duration: 0.8, ease: 'power3.out' }, tUp);
+  tl.to(dwash, { opacity: 0.84, duration: 0.8, ease: 'power1.inOut' }, tUp - 0.05);
+  cam.set(a, 560, 1080, 1.0);
   // steps check off one by one, the rail turns blue
-  cam.to(a + 0.2, 560, 1080, 1.0, 0.75);
   R.steps.forEach((st, i) => {
-    const t = a + 0.6 + i * 0.28;
+    const t = tUp + 0.45 + i * 0.2;
     const d = el('div', { style: `position:absolute; left:${st.dot.x}px; top:${st.dot.y}px; width:36px; height:36px; border-radius:50%; background:#2F6BFF; display:grid; place-items:center; z-index:3`, html: '<svg width="18" height="18" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' }, cam.layer);
     tl.fromTo(d, { scale: 0.2, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.4, ease: 'back.out(3)' }, t);
     cue(t, 'tick', 0.3);
@@ -493,13 +521,13 @@ let chipOn = null;
     tl.fromTo(b, { autoAlpha: 0, scale: 1.03 }, { autoAlpha: 1, scale: 1, duration: 0.4 }, t);
     return b;
   };
-  const tBtn = W(4, 'button') - 0.25;
+  const tBtn = W(4, 'button') + 0.15;
   cam.to(tBtn, 627, R.code[0].y + R.code[0].h / 2, 1.3, 0.8);
-  const h1 = hiCode(R.code[0], W(4, 'button') + 0.25);
-  const tSig = W(4, 'signer') - 0.45;
-  cam.to(tSig, 627, R.code[1].y + R.code[1].h / 2 - 20, 1.3, 0.8);
+  const h1 = hiCode(R.code[0], W(4, 'checkout') + 0.15);
+  const tSig = W(4, 'signer') - 0.15;
+  cam.to(tSig, 627, R.code[1].y + R.code[1].h / 2 - 20, 1.3, 0.7);
   tl.to(h1, { autoAlpha: 0, duration: 0.3 }, tSig + 0.2);
-  hiCode(R.code[1], W(4, 'signer') + 0.15);
+  hiCode(R.code[1], W(4, 'signer') + 0.35);
 
   // Cut to Hartwell's checkout: the button slides in, then the paid receipt.
   const sc2 = el('div', { style: 'position:absolute; inset:0; opacity:0; z-index:10' }, screen);
@@ -634,8 +662,13 @@ function showCaption(t) {
 window.DURATION = V.duration;
 window.CUES = CUES.sort((x, y) => x.t - y.t);
 window.CAPTIONS = CAPTIONS;
-window.seek = (t) => { tl.time(Math.min(t, V.duration)); showCaption(t); return true; };
-window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((im) => im.decode().catch(() => console.warn('image failed', im.src)))]).then(() => { window.seek(0); return true; });
+/** Sets the time, the caption and the clip frames; resolves once every new clip frame has decoded. */
+window.seek = (t) => {
+  tl.time(Math.min(t, V.duration));
+  showCaption(t);
+  return Promise.all(LAYERS.flatMap((f) => f(t)).filter(Boolean)).then(() => true);
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].filter((im) => im.getAttribute('src')).map((im) => im.decode().catch(() => console.warn('image failed', im.src)))]).then(() => window.seek(0));
 </script>
 </body>
 </html>
