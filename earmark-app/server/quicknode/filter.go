@@ -14,12 +14,17 @@ type Payload struct {
 }
 
 // Earmark on Arc testnet (contracts/deployments/arc-testnet.json), lower case.
-var earmark = "0x9d91f4ee5ffad6a31d662801b695514770c4d0bd"
+var earmark = "0x9d91f4ee5ffad6a31d662801" +
+    "b695514770c4d0bd"
 
+// topic0 of each Earmark event (split in two to keep lines short).
 var earmarkTopics = map[string]string{
-    "0x011646b8aaaf35685f302664a2d64bbf4527f9672523ba1b66ba4075c3fa89e6": "GiftCreated",
-    "0x29a2780b7367ee72c019f299753b9068538d72514af7b15e3c17c460075c3832": "GiftRedeemed",
-    "0x6b5960a2dd87733f10cd737cafc43edc838100cebade18aaa39b6fc66a18a93b": "GiftRefunded",
+    "0x011646b8aaaf35685f302664a2d64bbf" +
+        "4527f9672523ba1b66ba4075c3fa89e6": "GiftCreated",
+    "0x29a2780b7367ee72c019f299753b9068" +
+        "538d72514af7b15e3c17c460075c3832": "GiftRedeemed",
+    "0x6b5960a2dd87733f10cd737cafc43edc" +
+        "838100cebade18aaa39b6fc66a18a93b": "GiftRefunded",
 }
 
 // lower lower-cases ASCII hex/addresses without needing the strings package.
