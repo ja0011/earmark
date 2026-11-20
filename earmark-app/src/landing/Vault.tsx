@@ -87,7 +87,8 @@ export function Vault() {
   const root = useRef<HTMLElement>(null);
   const wide = useMedia('(min-width: 900px)');
   const reduced = prefersReducedMotion();
-  const pinned = wide && !reduced;
+  // Pinned and stepped on every screen size (phones too); only Reduce Motion gets the plain stacked list.
+  const pinned = !reduced;
 
   useLayoutEffect(() => {
     if (!pinned) return;
@@ -148,7 +149,7 @@ export function Vault() {
       });
     }, el);
     return () => ctx.revert();
-  }, [pinned]);
+  }, [pinned, wide]);
 
   return (
     <section id="how" data-nav="dark" ref={root} tabIndex={-1} aria-labelledby="how-title" className="bg-vault text-receipt outline-none on-dark">
@@ -157,15 +158,15 @@ export function Vault() {
       </h2>
       {pinned ? (
         <div className="vault-pin relative h-dvh overflow-hidden">
-          <div className="mx-auto grid h-full max-w-[1320px] grid-cols-[1fr_340px_1fr] items-center gap-10 px-8 pt-[68px] xl:gap-14">
-            <div className="relative h-[280px]">
+          <div className="mx-auto grid h-full max-w-[1320px] grid-cols-1 content-center gap-6 px-5 pt-[68px] min-[900px]:grid-cols-[1fr_340px_1fr] min-[900px]:content-normal min-[900px]:items-center min-[900px]:gap-10 min-[900px]:px-8 xl:gap-14">
+            <div className="relative h-[190px] min-[900px]:h-[280px]">
               {BEATS.map((b, i) => (
                 <div key={b.key} className="beat-text absolute inset-x-0 top-0">
                   <div className="mono mb-5 flex items-center gap-3 text-[16px] text-fog">
                     <span className="text-seal">0{i + 1}</span>
                     <span>{b.label.toUpperCase()}</span>
                   </div>
-                  <p className="font-display text-[clamp(2.2rem,3.6vw,3.6rem)] font-extrabold leading-[0.98] tracking-[-0.02em]">{b.text}</p>
+                  <p className="font-display text-[clamp(1.85rem,3.6vw,3.6rem)] font-extrabold leading-[0.98] tracking-[-0.02em]">{b.text}</p>
                 </div>
               ))}
               <div className="absolute bottom-0 left-0 flex gap-2" aria-hidden="true">
@@ -174,13 +175,13 @@ export function Vault() {
                 ))}
               </div>
             </div>
-            <div className="flex h-full items-center justify-center">
-              <div className="receipt-paper zigzag-bottom w-full rounded-t-md px-6 pt-6 text-[16px] tracking-[0.01em] shadow-2xl">
+            <div className="flex items-start justify-center min-[900px]:h-full min-[900px]:items-center">
+              <div className="receipt-paper zigzag-bottom w-full max-w-[340px] rounded-t-md px-5 pt-5 text-[15px] tracking-[0.01em] shadow-2xl min-[900px]:px-6 min-[900px]:pt-6 min-[900px]:text-[16px]">
                 <ReceiptHead />
                 <ReceiptBlocks />
               </div>
             </div>
-            <div className="relative aspect-[3/2]">
+            <div className="relative hidden aspect-[3/2] min-[900px]:block">
               {[0, 1, 2].map((i) => (
                 <div key={i} className="beat-still absolute inset-0 flex items-center">
                   <Still i={i} className="w-full" />
