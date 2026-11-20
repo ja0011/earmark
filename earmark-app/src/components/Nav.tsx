@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { formatBalance, useBalance } from '../lib/chain';
 import { useConfig } from '../lib/config';
 import { useWallet } from '../lib/wallet';
+import { LanguagePicker, useT } from '../lib/i18n';
 
 export type NavVariant = 'landing' | 'app' | 'stores';
 type NavLink = { href: string; label: string; external?: boolean };
@@ -28,6 +29,7 @@ export function Nav({ variant = 'app' }: { variant?: NavVariant }) {
   const { wallet } = useWallet();
   const loc = useLocation();
   const cfg = useConfig();
+  const { t } = useT();
   const balance = useBalance(variant === 'app' ? cfg : null, wallet?.address);
   const [overDark, setOverDark] = useState(false);
 
@@ -56,9 +58,9 @@ export function Nav({ variant = 'app' }: { variant?: NavVariant }) {
       : variant === 'stores'
         ? [{ href: '/stores', label: 'Add Earmark' }]
         : [
-            { href: '/send', label: 'Send a gift' },
-            { href: '/me', label: 'Profile' },
-            { href: cfg?.hartwellUrl ?? 'http://localhost:5174', label: 'Shop at Hartwell', external: true },
+            { href: '/send', label: t('nav.send') },
+            { href: '/me', label: t('nav.profile') },
+            { href: cfg?.hartwellUrl ?? 'http://localhost:5174', label: t('nav.shop'), external: true },
           ];
 
   const go = (href: string) => (e: React.MouseEvent) => {
@@ -125,6 +127,7 @@ export function Nav({ variant = 'app' }: { variant?: NavVariant }) {
           {variant === 'landing' && (
             <div className="flex items-center gap-5">
               <span aria-hidden="true" className="h-6 w-px bg-current opacity-25" />
+              <LanguagePicker id="lang-picker-landing" />
               <Link to="/stores" className={`${linkCls} opacity-80 hover:opacity-100`}>
                 For stores
               </Link>
@@ -133,7 +136,9 @@ export function Nav({ variant = 'app' }: { variant?: NavVariant }) {
               </Link>
             </div>
           )}
+          {variant === 'app' && <LanguagePicker />}
           {variant === 'app' && chip}
+          {variant === 'stores' && <LanguagePicker id="lang-picker-stores" />}
           {variant === 'stores' && (
             <Link to="/" className={`${linkCls} opacity-80 hover:opacity-100`}>
               ← Back to Earmark
@@ -146,7 +151,7 @@ export function Nav({ variant = 'app' }: { variant?: NavVariant }) {
           className="-mr-2 grid h-11 w-11 place-items-center rounded-full md:hidden"
           aria-expanded={open}
           aria-controls="mobile-menu"
-          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-label={open ? t('nav.closeMenu') : t('nav.openMenu')}
           onClick={() => setOpen((o) => !o)}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
@@ -163,6 +168,9 @@ export function Nav({ variant = 'app' }: { variant?: NavVariant }) {
         <div id="mobile-menu" className={`md:hidden border-t ${variant === 'stores' ? 'border-white/10 bg-vault text-receipt' : 'border-rule bg-receipt text-ink'}`}>
           <ul className="flex flex-col px-5 py-3">
             {variant === 'app' && wallet && <li className="py-3">{chip}</li>}
+            <li className="py-2">
+              <LanguagePicker id="lang-picker-mobile" />
+            </li>
             {links.map((l) => (
               <li key={l.href}>{renderLink(l, 'block py-3 text-[18px] font-medium')}</li>
             ))}

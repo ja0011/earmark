@@ -1,0 +1,121 @@
+{
+  "duration": 8.216,
+  "lines": [
+    {
+      "speaker": "Earmark",
+      "text": "Hola Alex, tu regalo de $45 para la pala vence en cuatro días. ¿Quieres que te la compre?",
+      "start": 0,
+      "end": 6.409,
+      "words": [
+        {
+          "text": "Hola",
+          "start": 0,
+          "end": 0.36
+        },
+        {
+          "text": "Alex,",
+          "start": 0.418,
+          "end": 0.836
+        },
+        {
+          "text": "tu",
+          "start": 0.987,
+          "end": 1.103
+        },
+        {
+          "text": "regalo",
+          "start": 1.173,
+          "end": 1.463
+        },
+        {
+          "text": "de",
+          "start": 1.509,
+          "end": 1.579
+        },
+        {
+          "text": "$45",
+          "start": 1.625,
+          "end": 2.752
+        },
+        {
+          "text": "para",
+          "start": 2.821,
+          "end": 2.984
+        },
+        {
+          "text": "la",
+          "start": 3.03,
+          "end": 3.088
+        },
+        {
+          "text": "pala",
+          "start": 3.146,
+          "end": 3.344
+        },
+        {
+          "text": "vence",
+          "start": 3.402,
+          "end": 3.727
+        },
+        {
+          "text": "en",
+          "start": 3.785,
+          "end": 3.843
+        },
+        {
+          "text": "cuatro",
+          "start": 3.913,
+          "end": 4.261
+        },
+        {
+          "text": "días.",
+          "start": 4.296,
+          "end": 4.807
+        },
+        {
+          "text": "¿Quieres",
+          "start": 4.981,
+          "end": 5.317
+        },
+        {
+          "text": "que",
+          "start": 5.352,
+          "end": 5.422
+        },
+        {
+          "text": "te",
+          "start": 5.457,
+          "end": 5.526
+        },
+        {
+          "text": "la",
+          "start": 5.561,
+          "end": 5.631
+        },
+        {
+          "text": "compre?",
+          "start": 5.689,
+          "end": 6.409
+        }
+      ]
+    },
+    {
+      "speaker": "Alex",
+      "text": "Sí, cómprala.",
+      "start": 7.009,
+      "end": 8.216,
+      "words": [
+        {
+          "text": "Sí,",
+          "start": 7.009,
+          "end": 7.404
+        },
+        {
+          "text": "cómprala.",
+          "start": 7.462,
+          "end": 8.216
+        }
+      ]
+    }
+  ]
+}

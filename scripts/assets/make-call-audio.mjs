@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Generates the landing-page call sample (brief section 6) with ElevenLabs TTS "with-timestamps".
-//   node scripts/assets/make-call-audio.mjs
+//   node scripts/assets/make-call-audio.mjs            (English: call.mp3 / call.json)
+//   node scripts/assets/make-call-audio.mjs --lang es  (Spanish: call-es.mp3 / call-es.json, same voices)
 // Needs ELEVENLABS_API_KEY in the repo-root .env (never printed). Optional overrides in .env:
 //   ELEVENLABS_AGENT_VOICE_ID (default "Sarah", warm female), ELEVENLABS_ALEX_VOICE_ID (default "Liam", young male),
 //   ELEVENLABS_TTS_MODEL (default eleven_multilingual_v2), CALL_GAP_SECONDS (default 0.6).
@@ -20,6 +21,15 @@ export const LINES = [
   { speaker: 'Earmark', text: 'Hey Alex, your $45 shovel gift expires in four days. Want me to buy it for you?', voiceEnv: 'ELEVENLABS_AGENT_VOICE_ID', defaultVoice: 'EXAVITQu4vr4xnSDxMaL' /* Sarah */, settings: { stability: 0.55, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true, speed: 1.0 } },
   { speaker: 'Alex', text: 'Yeah, do it.', voiceEnv: 'ELEVENLABS_ALEX_VOICE_ID', defaultVoice: 'TX3LPaxmHKxFdv7VOQHJ' /* Liam */, settings: { stability: 0.45, similarity_boost: 0.75, style: 0.25, use_speaker_boost: true, speed: 1.0 } },
 ];
+
+// The same call in Spanish, for the landing page's "in their language" switch.
+export const LINES_ES = [
+  { ...LINES[0], text: 'Hola Alex, tu regalo de $45 para la pala vence en cuatro días. ¿Quieres que te la compre?' },
+  { ...LINES[1], text: 'Sí, cómprala.' },
+];
+const ES = process.argv.includes('--lang') && process.argv[process.argv.indexOf('--lang') + 1] === 'es';
+const USE = ES ? LINES_ES : LINES;
+const NAME = ES ? 'call-es' : 'call';
 
 function readEnv() {
   const file = path.join(ROOT, '.env');
@@ -76,11 +86,11 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
 
   const parts = [];
-  for (let i = 0; i < LINES.length; i++) {
-    const line = LINES[i];
+  for (let i = 0; i < USE.length; i++) {
+    const line = USE[i];
     const voice = env[line.voiceEnv] || line.defaultVoice;
-    const r = await tts(key, voice, model, line, i > 0 ? LINES[i - 1].text : undefined, LINES[i + 1]?.text);
-    const mp3 = path.join(RAW, `line-${i + 1}-${line.speaker.toLowerCase()}.mp3`);
+    const r = await tts(key, voice, model, line, i > 0 ? USE[i - 1].text : undefined, USE[i + 1]?.text);
+    const mp3 = path.join(RAW, `${ES ? 'es-' : ''}line-${i + 1}-${line.speaker.toLowerCase()}.mp3`);
     fs.writeFileSync(mp3, Buffer.from(r.audio_base64, 'base64'));
     fs.writeFileSync(mp3.replace(/\.mp3$/, '.json'), JSON.stringify({ voice, model, alignment: r.alignment, normalized_alignment: r.normalized_alignment }, null, 2));
     parts.push({ line, mp3, alignment: r.alignment, duration: probeDuration(mp3) });
@@ -103,7 +113,7 @@ async function main() {
     }
   });
   filters.push(`${seq.join('')}concat=n=${seq.length}:v=0:a=1[out]`);
-  args.push('-filter_complex', filters.join(';'), '-map', '[out]', '-c:a', 'libmp3lame', '-b:a', '128k', path.join(OUT, 'call.mp3'));
+  args.push('-filter_complex', filters.join(';'), '-map', '[out]', '-c:a', 'libmp3lame', '-b:a', '128k', path.join(OUT, `${NAME}.mp3`));
   execFileSync('ffmpeg', args, { stdio: 'inherit' });
 
   let offset = 0;
@@ -113,9 +123,9 @@ async function main() {
     offset += p.duration + (i < parts.length - 1 ? gap : 0);
     return entry;
   });
-  const duration = r3(probeDuration(path.join(OUT, 'call.mp3')));
-  fs.writeFileSync(path.join(OUT, 'call.json'), JSON.stringify({ duration, lines }, null, 2));
-  console.log(`call.mp3 ${duration}s, call.json written`);
+  const duration = r3(probeDuration(path.join(OUT, `${NAME}.mp3`)));
+  fs.writeFileSync(path.join(OUT, `${NAME}.json`), JSON.stringify({ duration, lines }, null, 2));
+  console.log(`${NAME}.mp3 ${duration}s, ${NAME}.json written`);
   try {
     execFileSync('python3', ['-I', path.join(ROOT, 'scripts/assets/build_manifest.py')], { stdio: 'inherit' });
   } catch { console.warn('manifest refresh failed; run scripts/assets/build_manifest.py'); }

@@ -16,7 +16,7 @@ export class AgentError extends Error {
 
 type Draft = { receiverName: string; storeName: string; itemQuery: string; amountUsd: string };
 
-const client = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY, timeout: 25_000, maxRetries: 1 }) : null;
+const client = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY, timeout: 60_000, maxRetries: 1 }) : null;
 
 const SYSTEM = `You are the Earmark send agent. Earmark locks money so it can only be spent on one item, at one store, by one person.
 The user describes a gift in plain words. Use the tools to find the receiver in the user's contacts, the store, and the exact catalogue item.

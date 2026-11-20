@@ -20,12 +20,16 @@ import {
 import { db, save } from './db';
 import { allGifts, changeLimit, ownerWallet, pub, readGift, same, storeSigner, usdcBalance } from './chain';
 import { demoAccounts, demoSend, isDemoAddress, personaOf, topUpDemo } from './demo';
-import { ensureDemoContacts, ensureHartwell, contactByAddress, publicContact, shortItem, storeByAddress, upsertContact, upsertStore, fetchCatalog, usdShort } from './directory';
+import { ensureDemoContacts, ensureHartwell, contactByAddress, publicContact, setLanguage, shortItem, storeByAddress, upsertContact, upsertStore, fetchCatalog, usdShort } from './directory';
 import { giftJson } from './gifts';
 import { AgentError, parseGift } from './agent';
 import { quicknodeRouter, startPoller } from './quicknode';
 import { sseHandler } from './sse';
-import { browserSession, createPurchaseRequest, placeCall, startReminders } from './calls';
+import { browserSession, createPurchaseRequest, inAppReminder, placeCall, reminderAudio, startReminders } from './calls';
+import { asLang, isLang, LANGS, notifyLocal, translate } from './i18n';
+import { AUDIO_DIR, speak, transcribe, VOICE_ENABLED, voiceFor } from './voice';
+import { uid } from './db';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ROOT } from './config';
@@ -91,7 +95,10 @@ app.get('/api/config', h(async (_req, res) => {
       events: QUICKNODE_ENABLED ? 'quicknode' : 'poller',
       calls: CALL_MODE,
       faucet: Boolean(DEPLOYER_PRIVATE_KEY),
+      voice: VOICE_ENABLED,
+      translate: Boolean(ANTHROPIC_API_KEY),
     },
+    languages: Object.entries(LANGS).map(([code, l]) => ({ code, name: l.name, native: l.native })),
   });
 }));
 
@@ -114,6 +121,122 @@ app.get('/api/contacts', (_req, res) => res.json({ contacts: db.contacts.map(pub
 app.post('/api/contacts', h((req, res) => {
   const c = upsertContact({ name: String(req.body?.name ?? ''), address: String(req.body?.address ?? ''), phone: undefined });
   res.json({ ok: true, contact: publicContact(c) });
+}));
+
+app.post('/api/contacts/language', h((req, res) => {
+  const address = needAddress(req.body?.address, 'address');
+  if (!isLang(req.body?.language)) return res.status(400).json({ error: 'BAD_LANGUAGE', message: `Pick one of: ${Object.keys(LANGS).join(', ')}.` });
+  res.json({ ok: true, contact: publicContact(setLanguage(address, req.body.language)) });
+}));
+
+/** Page text for the pages without hand-written strings (landing, send, stores). Cached forever per string. */
+app.post('/api/translate', h(async (req, res) => {
+  const lang = req.body?.lang;
+  if (!isLang(lang)) return res.status(400).json({ error: 'BAD_LANGUAGE' });
+  const texts = Array.isArray(req.body?.texts) ? req.body.texts.filter((x: unknown) => typeof x === 'string' && x.trim()).slice(0, 80).map((x: string) => x.slice(0, 500)) : [];
+  if (!texts.length) return res.json({ translations: [] });
+  const fresh = texts.filter((x: string) => !db.translations[`en>${lang}:${x}`]).length;
+  if (fresh && limited(`translate:${req.ip}`, 40, 10 * 60_000)) return res.status(429).json({ error: 'SLOW_DOWN', message: 'Give it a minute.' });
+  res.json({ translations: await translate(texts, lang) });
+}));
+
+// ---------------------------------------------------------------- voice (ElevenLabs): reminders, notes, replies
+
+app.get('/api/audio/:file', (req, res) => {
+  const f = String(req.params.file);
+  if (!/^[a-z0-9]{8,40}\.(mp3|webm|ogg|m4a)$/.test(f)) return res.status(400).json({ error: 'BAD_FILE' });
+  const path = resolve(AUDIO_DIR, f);
+  if (!existsSync(path)) return res.status(404).json({ error: 'NOT_FOUND' });
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.sendFile(path);
+});
+
+const giftParam = async (raw: unknown) => {
+  const id = String(raw ?? '');
+  if (!/^\d{1,12}$/.test(id)) throw Object.assign(new Error('Bad gift number.'), { status: 400, code: 'BAD_ID' });
+  deployment();
+  const g = await readGift(BigInt(id));
+  if (!g) throw Object.assign(new Error('No gift with that number.'), { status: 404, code: 'NOT_FOUND' });
+  return { id, g };
+};
+
+/** The recorded reminder for this gift, in the requested language (default: the receiver's). */
+app.get('/api/gifts/:id/reminder', h(async (req, res) => {
+  const { g } = await giftParam(req.params.id);
+  if (limited(`reminder:${req.ip}`, 30, 10 * 60_000)) return res.status(429).json({ error: 'SLOW_DOWN', message: 'Give it a minute.' });
+  const lang = isLang(req.query.lang) ? req.query.lang : asLang(contactByAddress(g.receiver)?.language);
+  res.json({ lang, ...(await reminderAudio(g, lang)) });
+}));
+
+/** Demo only: send the 7/4-day reminder now instead of waiting for the sweep. */
+app.post('/api/gifts/:id/remind', h(async (req, res) => {
+  const { id, g } = await giftParam(req.params.id);
+  if (g.status !== 1) return res.status(409).json({ error: 'NOT_LOCKED', message: 'This gift has already been used.' });
+  if (limited(`remind:${id}`, 3, 10 * 60_000)) return res.status(429).json({ error: 'SLOW_DOWN', message: 'That reminder was just sent.' });
+  await inAppReminder(g, '4d');
+  res.json({ ok: true });
+}));
+
+/** The sender's note: once, right after the gift is locked. */
+app.post('/api/gifts/:id/note', h(async (req, res) => {
+  const { id, g } = await giftParam(req.params.id);
+  const text = String(req.body?.text ?? '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (!text) return res.status(400).json({ error: 'EMPTY', message: 'Write a few words first.' });
+  if (!same(req.body?.from, g.sender)) return res.status(403).json({ error: 'NOT_SENDER', message: 'Only the sender can add a note.' });
+  if (db.notes[id]) return res.status(409).json({ error: 'HAS_NOTE', message: 'This gift already has a note.' });
+  const created = db.giftTx[id]?.createdAt;
+  if (created && Date.now() - created > 30 * 60_000) return res.status(409).json({ error: 'TOO_LATE', message: 'Notes can only be added right after sending.' });
+  db.notes[id] = { text, at: Date.now() };
+  save();
+  // Translate and record it in the receiver's language now, so it's ready when they open the gift.
+  const lang = asLang(contactByAddress(g.receiver)?.language);
+  const sender = contactByAddress(g.sender)?.name ?? 'Someone';
+  translate([text], lang).then(([t]) => speak(t, { lang, speaker: sender, voice: voiceFor(sender) })).catch(() => {});
+  res.json({ ok: true });
+}));
+
+app.get('/api/gifts/:id/note', h(async (req, res) => {
+  const { id, g } = await giftParam(req.params.id);
+  const note = db.notes[id];
+  if (!note) return res.json({ note: null });
+  const lang = isLang(req.query.lang) ? req.query.lang : asLang(contactByAddress(g.receiver)?.language);
+  const sender = contactByAddress(g.sender)?.name ?? 'Someone';
+  const [translated] = await translate([note.text], lang);
+  const spoken = await speak(translated, { lang, speaker: sender, voice: voiceFor(sender) });
+  res.json({ note: { original: note.text, translated, lang, translatedBy: translated !== note.text, from: sender, ...spoken } });
+}));
+
+/** The receiver answers by voice, in any language. ElevenLabs Scribe writes it down; Claude puts it in English for the sender. */
+app.post('/api/gifts/:id/reply', express.raw({ type: ['audio/*', 'application/octet-stream'], limit: '2mb' }), h(async (req, res) => {
+  const { id, g } = await giftParam(req.params.id);
+  const from = needAddress(req.query.from, 'from');
+  if (!same(from, g.receiver)) return res.status(403).json({ error: 'NOT_RECEIVER', message: 'Only the receiver can reply.' });
+  if (limited(`reply:${id}`, 5, 3_600_000)) return res.status(429).json({ error: 'SLOW_DOWN', message: 'That is a lot of replies. Try again later.' });
+  const audio = req.body as Buffer;
+  if (!Buffer.isBuffer(audio) || audio.length < 1000) return res.status(400).json({ error: 'NO_AUDIO', message: "Didn't catch anything. Hold the button and speak." });
+  const mime = String(req.headers['content-type'] ?? 'audio/webm');
+  const hint = asLang(contactByAddress(g.receiver)?.language);
+  const heard = await transcribe(audio, mime, hint);
+  if (!heard.text) return res.status(422).json({ error: 'SILENT', message: "Didn't catch any words. Try again." });
+  const lang = heard.lang ?? hint;
+  const [english] = lang === 'en' ? [heard.text] : await translate([heard.text], 'en', lang);
+  const rid = uid();
+  const ext = mime.includes('mpeg') ? 'mp3' : mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';
+  mkdirSync(AUDIO_DIR, { recursive: true });
+  writeFileSync(resolve(AUDIO_DIR, `${rid}.${ext}`), audio);
+  const reply = { id: rid, giftId: id, from: g.receiver, to: g.sender, text: heard.text, english, language: lang, audio: `${rid}.${ext}`, at: Date.now() };
+  db.replies.push(reply);
+  save();
+  const who = contactByAddress(g.receiver)?.name ?? 'They';
+  await notifyLocal(getAddress(g.sender), `${who} replied: "${english}"`, { giftId: id, kind: 'Reply' });
+  res.json({ ok: true, reply: replyJson(reply) });
+}));
+
+const replyJson = (r: (typeof db.replies)[number]) => ({ ...r, audioUrl: r.audio ? `/api/audio/${r.audio}` : null, languageName: r.language && isLang(r.language) ? LANGS[r.language].native : null });
+
+app.get('/api/gifts/:id/replies', h(async (req, res) => {
+  const { id } = await giftParam(req.params.id);
+  res.json({ replies: db.replies.filter((r) => r.giftId === id).map(replyJson) });
 }));
 
 // ---------------------------------------------------------------- stores
@@ -192,7 +315,8 @@ app.get('/api/gifts', h(async (req, res) => {
   if (receiver) gifts = gifts.filter((g) => same(g.receiver, receiver));
   if (sender) gifts = gifts.filter((g) => same(g.sender, sender));
   if (store) gifts = gifts.filter((g) => same(g.store, store));
-  res.json({ gifts: await Promise.all(gifts.slice(0, 50).map(giftJson)) });
+  const lang = isLang(req.query.lang) ? req.query.lang : undefined;
+  res.json({ gifts: await Promise.all(gifts.slice(0, 50).map((g) => giftJson(g, lang))) });
 }));
 
 app.get('/api/gifts/:id', h(async (req, res) => {
@@ -201,7 +325,7 @@ app.get('/api/gifts/:id', h(async (req, res) => {
   if (!/^\d{1,12}$/.test(id)) return res.status(400).json({ error: 'BAD_ID' });
   const g = await readGift(BigInt(id), req.query.fresh === '1');
   if (!g) return res.status(404).json({ error: 'NOT_FOUND', message: 'No gift with that number.' });
-  res.json({ gift: await giftJson(g) });
+  res.json({ gift: await giftJson(g, isLang(req.query.lang) ? req.query.lang : undefined) });
 }));
 
 // ---------------------------------------------------------------- activity (profile page)
@@ -210,7 +334,7 @@ app.get('/api/gifts/:id', h(async (req, res) => {
 app.get('/api/activity', h(async (req, res) => {
   const address = needAddress(req.query.address, 'address');
   deployment();
-  type Entry = { id: string; kind: string; text: string; at: number | null; txHash: Hex | null; giftId?: string; amountUsd?: string; change?: string };
+  type Entry = { id: string; kind: string; text: string; at: number | null; txHash: Hex | null; giftId?: string; amountUsd?: string; change?: string; audioUrl?: string; original?: string };
   const out: Entry[] = [];
   const noteAt = (giftId: string, kind: string) => db.notifications.find((n) => n.giftId === giftId && n.kind === kind)?.at ?? null;
   const gifts = (await allGifts()).filter((g) => same(g.sender, address) || same(g.receiver, address)).slice(0, 60);
@@ -253,12 +377,26 @@ app.get('/api/activity', h(async (req, res) => {
       });
     }
   }
+  for (const r of db.replies) {
+    if (!same(r.to, address) && !same(r.from, address)) continue;
+    const mine = same(r.from, address);
+    const who = contactByAddress(mine ? r.to : r.from)?.name ?? 'They';
+    out.push({ id: `reply:${r.id}`, kind: 'reply', text: mine ? `You replied to ${who}: "${r.text}"` : `${who} replied: "${r.english}"`, at: r.at, txHash: null, giftId: r.giftId, audioUrl: r.audio ? `/api/audio/${r.audio}` : undefined, original: !mine && r.text !== r.english ? r.text : undefined });
+  }
   for (const f of db.fundTx) {
     if (!same(f.address, address)) continue;
     out.push({ id: `fund:${f.txHash}`, kind: 'funded', text: `Test USDC added to your wallet${f.amountUsd ? ` (+${f.amountUsd})` : ''}.`, at: f.at, txHash: f.txHash });
   }
   out.sort((a, b) => (b.at ?? 0) - (a.at ?? 0) || b.id.localeCompare(a.id));
-  res.json({ activity: out.slice(0, 80) });
+  const list = out.slice(0, 80);
+  const lang = isLang(req.query.lang) ? req.query.lang : 'en';
+  if (lang !== 'en') {
+    // Replies keep the person's own words; everything else reads in their language.
+    const idx = list.map((e, i) => (e.kind === 'reply' ? -1 : i)).filter((i) => i >= 0);
+    const tr = await translate(idx.map((i) => list[i].text), lang);
+    idx.forEach((i, k) => (list[i] = { ...list[i], text: tr[k] }));
+  }
+  res.json({ activity: list });
 }));
 
 // ---------------------------------------------------------------- notifications
@@ -297,7 +435,7 @@ app.get('/api/calls/session', h(async (req, res) => {
 app.post('/api/agent/purchase-request', h(async (req, res) => {
   const b = req.body ?? {};
   // source: "browser" (the agent's client tool in the gift page), "demo" (recorded sample), else the phone webhook.
-  const source = b.source === 'demo' ? 'demo' : b.source === 'browser' ? 'browser' : 'call';
+  const source = b.source === 'demo' ? 'demo' : b.source === 'browser' ? 'browser' : b.source === 'reminder' ? 'reminder' : 'call';
   if (source === 'call' && ELEVENLABS_TOOL_SECRET && req.headers['x-earmark-tool-secret'] !== ELEVENLABS_TOOL_SECRET) {
     return res.status(401).json({ error: 'BAD_SECRET' });
   }

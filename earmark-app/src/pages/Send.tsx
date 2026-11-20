@@ -12,6 +12,7 @@ import { addressUrl, useConfig } from '../lib/config';
 import { chainMessage, publicClient } from '../lib/chain';
 import { sentence } from '../lib/gifts';
 import { useWallet } from '../lib/wallet';
+import { nativeName } from '../lib/i18n';
 
 type Parsed = {
   receiver: { name: string; address: Address };
@@ -38,6 +39,17 @@ export default function Send() {
   const [done, setDone] = useState<{ giftId: string; fingerprint: Hex } | null>(null);
   const [balance, setBalance] = useState<bigint | null>(null);
   const [funding, setFunding] = useState(false);
+  const [note, setNote] = useState('');
+  const [noteLang, setNoteLang] = useState<string | null>(null);
+  // The receiver's language, so the sender knows their note will be translated.
+  useEffect(() => {
+    setNoteLang(null);
+    const to = parsed?.receiver.address.toLowerCase();
+    if (!to) return;
+    api<{ contacts: { address: string; language?: string }[] }>('/api/contacts')
+      .then((r) => setNoteLang(r.contacts.find((c) => c.address.toLowerCase() === to)?.language ?? null))
+      .catch(() => {});
+  }, [parsed?.receiver.address]);
 
   const refreshBalance = async () => {
     if (!cfg?.ready || !cfg.usdc || !wallet) return setBalance(null);
@@ -124,6 +136,8 @@ export default function Send() {
           if (ev.eventName === 'GiftCreated') {
             const a = ev.args as any;
             setDone({ giftId: String(a.giftId), fingerprint: a.fingerprint });
+            // The note: translated into the receiver's language and read aloud on their gift page (ElevenLabs).
+            if (note.trim()) api(`/api/gifts/${String(a.giftId)}/note`, { method: 'POST', json: { text: note.trim(), from: wallet.address } }).catch(() => {});
           }
         } catch {}
       }
@@ -207,6 +221,17 @@ export default function Send() {
                     : `${formatUsdc(leftover)} would be left over. $10 or less goes to them; more goes back to the sender.`
                   : 'Exactly the price. Nothing left over.'}
               </p>
+              <div className="mt-6 font-sans">
+                <label htmlFor="gift-note" className="block text-[17px] font-semibold">
+                  Note for {parsed.receiver.name} <span className="font-normal text-ink-soft">(optional)</span>
+                </label>
+                <textarea id="gift-note" className="field mt-2 min-h-[84px] resize-y" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Get the good one. Love you." />
+                <p className="mt-1 text-[15px] text-ink-soft">
+                  {noteLang && noteLang !== 'en'
+                    ? `${parsed.receiver.name} reads ${nativeName(noteLang)}. Earmark translates your note and reads it aloud.`
+                    : 'Earmark reads it aloud on their gift page, in the language they pick.'}
+                </p>
+              </div>
               <div className="mt-6 flex flex-col gap-3 pb-2 font-sans">
                 {wallet && balance !== null && (
                   <p className="text-[16px]">
@@ -261,7 +286,7 @@ export default function Send() {
               </div>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to={`/gift/${done.giftId}`} className="btn btn-seal">Open the gift</Link>
-                <button type="button" className="btn btn-outline" onClick={() => (setParsed(null), setDone(null), setTxs({}))}>
+                <button type="button" className="btn btn-outline" onClick={() => (setParsed(null), setDone(null), setTxs({}), setNote(''))}>
                   Send another
                 </button>
               </div>

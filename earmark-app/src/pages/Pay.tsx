@@ -8,6 +8,7 @@ import { api } from '../lib/api';
 import { useConfig } from '../lib/config';
 import { chainMessage } from '../lib/chain';
 import { redeemWithStore, sentence, type GiftView, type RedeemResult } from '../lib/gifts';
+import { useHtmlLang, useT } from '../lib/i18n';
 import { useWallet } from '../lib/wallet';
 
 type StoreRec = { name: string; store: Address; website: string; signUrl: string };
@@ -20,6 +21,8 @@ const priceText = (p?: string) => {
 
 /** The Earmark pay popup, opened by EarmarkPayButton from a store's checkout. */
 export default function Pay() {
+  const { t } = useT();
+  useHtmlLang();
   const cfg = useConfig();
   const { wallet, signer } = useWallet();
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
@@ -142,58 +145,58 @@ export default function Pay() {
     <div className="min-h-dvh bg-receipt text-ink">
       <header className="flex items-center justify-between border-b border-rule px-5 py-4">
         <span className="font-display text-[24px] font-extrabold tracking-[-0.02em]">EARMARK</span>
-        <span className="text-[15px] text-ink-soft">Paying {storeName}</span>
+        <span className="text-[15px] text-ink-soft">{t('pay.paying', { store: storeName })}</span>
       </header>
       <main className="mx-auto flex max-w-[440px] flex-col gap-6 px-5 py-6">
         {!window.opener || !openerOrigin ? (
-          <p className="text-[18px]">Open this from a store's checkout with the Pay with Earmark gift button.</p>
+          <p className="text-[18px]">{t('pay.openFromStore')}</p>
         ) : paid ? (
           <div className="flex flex-col gap-5" role="status">
-            <h1 className="display text-[44px]">Paid.</h1>
+            <h1 className="display text-[44px]">{t('pay.paid')}</h1>
             <div className="receipt-paper zigzag-bottom rounded-t-xl px-5 pt-5 text-[15px]">
               <Row left={gift?.item?.name ?? 'ITEM'} right={formatUsdc(paid.price)} />
               {BigInt(paid.change) > 0n && (
                 <Row
                   className="font-bold"
-                  left={paid.changeTo.toLowerCase() === wallet?.address.toLowerCase() ? `CHANGE TO ${(wallet?.name ?? 'YOU').toUpperCase()}` : 'BACK TO SENDER'}
+                  left={paid.changeTo.toLowerCase() === wallet?.address.toLowerCase() ? t('receipt.changeTo', { name: (wallet?.name ?? 'YOU').toUpperCase() }) : t('receipt.backTo', { name: (gift?.senderName ?? 'SENDER').toUpperCase() })}
                   right={formatUsdc(paid.change)}
                 />
               )}
               <div className="mt-3 pb-1 font-sans">
-                <TxLink hash={paid.txHash} label="Arc transaction" />
+                <TxLink hash={paid.txHash} label={t('pay.arcTx')} />
               </div>
             </div>
             <button type="button" className="btn btn-seal" onClick={() => window.close()}>
-              Back to {storeName}
+              {t('pay.backTo', { store: storeName })}
             </button>
           </div>
         ) : (
           <>
             <section aria-labelledby="cart-h">
               <h1 id="cart-h" className="text-[20px] font-semibold">
-                Your cart
+                {t('pay.cart')}
               </h1>
               {!cart ? (
-                <p className="mt-2 text-[16px] text-ink-soft">Waiting for the store…</p>
+                <p className="mt-2 text-[16px] text-ink-soft">{t('pay.waitingStore')}</p>
               ) : (
                 <div className="receipt-paper zigzag-bottom mt-3 rounded-t-xl px-5 pt-4 text-[15px]">
                   {cart.map((l) => (
                     <Row key={l.sku} left={`${l.qty > 1 ? `${l.qty} × ` : ''}${(l.name ?? l.sku).toUpperCase()}`} right={priceText(l.price)} />
                   ))}
-                  {cart.length > 1 && total > 0n && <Row className="mt-1 border-t-2 border-dashed border-rule pt-2" left="TOTAL" right={formatUsdc(total)} />}
+                  {cart.length > 1 && total > 0n && <Row className="mt-1 border-t-2 border-dashed border-rule pt-2" left={t('pay.total')} right={formatUsdc(total)} />}
                 </div>
               )}
             </section>
 
             {signMismatch && <p role="alert" className="text-[16px] font-medium">This checkout's signer doesn't match the one {storeName} registered with Earmark, so Earmark won't pay it.</p>}
 
-            <SignIn title="Sign in to pay" compact={Boolean(wallet)} />
+            <SignIn title={t('pay.signIn')} compact={Boolean(wallet)} />
 
-            {wallet && gifts && gifts.length === 0 && <p className="text-[17px]">You don't have a gift that works at {storeName}.</p>}
+            {wallet && gifts && gifts.length === 0 && <p className="text-[17px]">{t('pay.noGift', { store: storeName })}</p>}
 
             {wallet && gifts && gifts.length > 0 && (
               <fieldset>
-                <legend className="text-[20px] font-semibold">Your gifts for {storeName}</legend>
+                <legend className="text-[20px] font-semibold">{t('pay.giftsFor', { store: storeName })}</legend>
                 <div className="mt-3 flex flex-col gap-3">
                   {gifts.map((g) => (
                     <label
@@ -204,7 +207,7 @@ export default function Pay() {
                       <span className="flex-1">
                         <span className="mono block text-[18px]">{g.amountUsd}</span>
                         <span className="text-[16px] text-ink-soft">
-                          {g.item ? sentence(g.item.name) : 'Item'} · from {g.senderName ?? 'someone'}
+                          {g.item ? sentence(g.item.name) : 'Item'} · {t('p.from', { name: g.senderName ?? t('gift.someone') })}
                         </span>
                       </span>
                     </label>
@@ -216,7 +219,7 @@ export default function Pay() {
             {mismatch && (
               <div role="alert" className="rounded-2xl border-2 border-ink bg-paper px-5 py-4">
                 <p className="text-[19px] font-semibold">{mismatch}</p>
-                <p className="mt-1 text-[16px] text-ink-soft">Change your cart in the store, then press the Earmark button again.</p>
+                <p className="mt-1 text-[16px] text-ink-soft">{t('pay.changeCart')}</p>
               </div>
             )}
 
@@ -229,12 +232,12 @@ export default function Pay() {
             {gift && !mismatch && (
               <button type="button" className="btn btn-seal w-full text-[18px]" onClick={pay} disabled={!!step || !cart || !signUrl || signMismatch || !cfg?.ready}>
                 {step === 'passkey'
-                  ? (wallet?.kind === 'metamask' ? 'Confirm in MetaMask…' : 'Confirm with your passkey…')
+                  ? (wallet?.kind === 'metamask' ? t('pr.confirmMM') : t('pr.confirmPasskey'))
                   : step === 'signing'
-                    ? `${storeName} is signing…`
+                    ? t('pr.storeSigning', { store: storeName })
                     : step === 'sending' || step === 'confirming'
-                      ? 'Paying on Arc…'
-                      : `Pay ${priceText(cart?.[0]?.price) || 'with this gift'}`}
+                      ? t('pr.paying')
+                      : priceText(cart?.[0]?.price) ? t('pay.pay', { price: priceText(cart?.[0]?.price) }) : t('pay.withGift')}
               </button>
             )}
           </>

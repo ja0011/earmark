@@ -18,7 +18,7 @@ export const EXPLORER = env('ARC_EXPLORER', 'https://explorer.testnet.arc.io');
 export const DEPLOYMENT_FILE = resolve(ROOT, env('EARMARK_DEPLOYMENT', '../contracts/deployments/arc-testnet.json'));
 
 export const ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY');
-export const AGENT_MODEL = env('AGENT_MODEL', 'claude-sonnet-5-5');
+export const AGENT_MODEL = env('AGENT_MODEL', 'claude-fable-5-2');
 
 export const DEPLOYER_PRIVATE_KEY = env('DEPLOYER_PRIVATE_KEY') as Hex | '';
 

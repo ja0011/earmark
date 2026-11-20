@@ -1,7 +1,9 @@
 import { useEffect, type ReactNode } from 'react';
 import { Nav, type NavVariant } from './Nav';
+import { useHtmlLang } from '../lib/i18n';
 
 export function AppLayout({ children, title, variant = 'app' }: { children: ReactNode; title: string; variant?: NavVariant }) {
+  useHtmlLang();
   useEffect(() => {
     document.title = `${title} · Earmark`;
     window.scrollTo(0, 0);

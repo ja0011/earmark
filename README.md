@@ -118,7 +118,15 @@ itemId = keccak256("hartwell-supply:<sku>")       // e.g. hartwell-supply:snow-s
 - **ElevenLabs Agents:** "Earmark reminder" is a conversational voice agent with dynamic variables (`receiver_name`, `amount`, `item`, `days_left`, `gift_id`, `channel`). It says *"Hey Alex, your $45 shovel gift expires in four days. Want me to buy it for you?"* If Alex says yes, it calls a tool that creates a purchase request. The agent never moves money: Alex approves in the app with his passkey, and only then does `redeem` run.
   - **In the browser** ("Call me now" on the gift page) via `@elevenlabs/client`, with a short-lived conversation token minted by the server, so the key never reaches the browser. The tool is a client tool, `request_purchase_in_app`.
   - **On the phone** via ElevenLabs' Twilio integration (`/v1/convai/twilio/outbound-call`). A reminder job calls 7 and 4 days before expiry, and the tool is a server webhook, `request_purchase`.
-- **Text to Speech with timestamps:** the call sample on the landing page was generated with ElevenLabs TTS. Its character alignment drives the transcript typing in sync with the audio, and a Web Audio analyser draws the waveform.
+  - **In the receiver's language:** each call sends `overrides.agent.language` and a translated first message, so the agent greets and talks in Spanish when that's the receiver's language. It has a Spanish `language_presets` entry, and it switches if the person answers in the other language.
+- **Text to Speech with timestamps:**
+  - The call sample on the landing page was generated with ElevenLabs TTS. Its character alignment drives the transcript typing in sync with the audio, and a Web Audio analyser draws the waveform.
+  - **Reminders:** at 7 and 4 days before expiry, the receiver gets an in-app message from Earmark, also available as "Hear the reminder" on the gift page. It's the same voice as the sample, generated per gift in the receiver's language (`eleven_multilingual_v2`, `server/voice.ts`). After it plays, they answer "Yes, buy it", which is the same passkey-approved purchase request as the call.
+  - **Notes from family:** the sender's short note is translated (Claude) and read aloud in the sender's voice on the receiver's gift page. The original is one tap away.
+  - Every line is generated once and cached in `server/data/audio`.
+- **Speech to Text (Scribe):** the receiver can reply by voice in their own language. Scribe transcribes it and detects the language, Claude puts it in English, and the sender gets the English text plus the original recording.
+
+The receiver picks their language in the top bar or on Profile. Their gift page, profile, checkout popup and notifications switch to it, with hand-written strings in `earmark-app/src/i18n/`. The landing page keeps the English copy.
 
 Agent setup: [`earmark-app/server/elevenlabs/agent-config.md`](earmark-app/server/elevenlabs/agent-config.md).
 

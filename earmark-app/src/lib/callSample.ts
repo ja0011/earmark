@@ -1,6 +1,7 @@
 export type Word = { text: string; start: number; end: number };
-export type Line = { speaker: 'Earmark' | 'Alex'; text: string; start: number; end: number; words: Word[] };
-export type CallScript = { duration: number; lines: Line[] };
+export type Line = { speaker: string; text: string; start: number; end: number; words: Word[] };
+/** joiner: '' for languages written without spaces (Chinese). */
+export type CallScript = { duration: number; lines: Line[]; joiner?: string };
 
 const FALLBACK_LINES: { speaker: 'Earmark' | 'Alex'; text: string }[] = [
   { speaker: 'Earmark', text: 'Hey Alex, your $45 shovel gift expires in four days. Want me to buy it for you?' },
@@ -24,9 +25,10 @@ export function estimatedScript(): CallScript {
   return { duration: t, lines };
 }
 
-export async function loadCallScript(): Promise<{ script: CallScript; real: boolean }> {
+/** base: '/media/call/call' (English) or '/media/call/call-es' (Spanish). */
+export async function loadCallScript(base = '/media/call/call'): Promise<{ script: CallScript; real: boolean }> {
   try {
-    const r = await fetch('/media/call/call.json');
+    const r = await fetch(`${base}.json`);
     if (r.ok && (r.headers.get('content-type') ?? '').includes('json')) {
       const j = (await r.json()) as CallScript;
       if (Array.isArray(j.lines) && j.lines.length) {

@@ -28,13 +28,18 @@ export type GiftView = {
   price?: string;
   change?: string;
   changeTo?: Address;
+  /** The item's name in the requested language (null in English). */
+  itemLocal?: string | null;
+  receiverLanguage?: string;
+  hasNote?: boolean;
+  reminders?: { d7?: number; d4?: number };
 };
 
 export const titleCase = (s: string) => s.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
 export const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
 /** Gift from the server, kept live via SSE (and a periodic chain re-read as a backstop). */
-export function useGift(id: string | undefined) {
+export function useGift(id: string | undefined, lang = 'en') {
   const [gift, setGift] = useState<GiftView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -43,7 +48,7 @@ export function useGift(id: string | undefined) {
     if (!id) return;
     let alive = true;
     const load = (fresh = false) =>
-      api<{ gift: GiftView }>(`/api/gifts/${id}${fresh ? '?fresh=1' : ''}`)
+      api<{ gift: GiftView }>(`/api/gifts/${id}?lang=${lang}${fresh ? '&fresh=1' : ''}`)
         .then((r) => alive && (setGift(r.gift), setError(null)))
         .catch((e) => alive && setError(e.message));
     load(true);
@@ -55,7 +60,7 @@ export function useGift(id: string | undefined) {
       es.close();
       clearInterval(iv);
     };
-  }, [id, tick]);
+  }, [id, tick, lang]);
 
   return { gift, error, reload: () => setTick((t) => t + 1), setGift };
 }

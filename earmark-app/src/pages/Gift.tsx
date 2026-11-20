@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { earmarkAbi, formatUsdc } from 'earmark-plugin';
 import type { Hex } from 'viem';
 import { AppLayout } from '../components/AppLayout';
@@ -14,13 +14,22 @@ import { useConfig } from '../lib/config';
 import { chainMessage, publicClient } from '../lib/chain';
 import { redeemWithStore, sentence, useCountdown, useGift } from '../lib/gifts';
 import { useWallet } from '../lib/wallet';
+import { useT } from '../lib/i18n';
+import { ReminderPanel } from '../components/ReminderPanel';
+import { GiftNote } from '../components/GiftNote';
+import { RepliesList, VoiceReply, type Reply } from '../components/VoiceReply';
 
-type PR = { id: string; giftId: string; status: string; source: 'call' | 'browser' | 'demo' };
+type PR = { id: string; giftId: string; status: string; source: 'call' | 'browser' | 'demo' | 'reminder' };
 
 export default function GiftPage() {
   const { id } = useParams();
   const cfg = useConfig();
-  const { gift, error, reload } = useGift(id);
+  const { t, lang, locale } = useT();
+  const { gift, error, reload } = useGift(id, lang);
+  const [params] = useSearchParams();
+  const [reminderToken, setReminderToken] = useState(0);
+  const [showReminder, setShowReminder] = useState(params.get('reminder') === '1');
+  const [replies, setReplies] = useState<Reply[]>([]);
   const { wallet, signer } = useWallet();
   const cd = useCountdown(gift?.expiry);
   const [requests, setRequests] = useState<PR[]>([]);
@@ -48,6 +57,11 @@ export default function GiftPage() {
     es.addEventListener('purchase-request', loadRequests as EventListener);
     return () => es.close();
   }, [gift?.receiver]);
+
+  useEffect(() => {
+    if (!id) return;
+    api<{ replies: Reply[] }>(`/api/gifts/${id}/replies`).then((r) => setReplies(r.replies)).catch(() => {});
+  }, [id]);
 
   useEffect(() => {
     if (gift?.item) document.title = `${gift.amountUsd} for a ${gift.item.name.toLowerCase()} · Earmark`;
@@ -135,8 +149,8 @@ export default function GiftPage() {
 
   if (error && !gift) {
     return (
-      <AppLayout title={`Gift #${id}`}>
-        <h1 className="display text-[clamp(2.5rem,6vw,5rem)]">Gift #{id}</h1>
+      <AppLayout title={t('gift.title', { id: id ?? '' })}>
+        <h1 className="display text-[clamp(2.5rem,6vw,5rem)]">{t('gift.title', { id: id ?? '' })}</h1>
         <div className="mt-8 max-w-[640px]">
           <Notice tone="error">{error}</Notice>
         </div>
@@ -145,41 +159,44 @@ export default function GiftPage() {
   }
   if (!gift) {
     return (
-      <AppLayout title={`Gift #${id}`}>
+      <AppLayout title={t('gift.title', { id: id ?? '' })}>
         <div className="max-w-[460px] animate-pulse rounded-[22px] bg-placeholder" style={{ aspectRatio: '1.58' }} />
       </AppLayout>
     );
   }
 
-  const itemName = gift.item ? sentence(gift.item.name) : 'Item';
-  const storeName = gift.storeName ?? 'the store';
+  const itemName = gift.itemLocal ? sentence(gift.itemLocal) : gift.item ? sentence(gift.item.name) : 'Item';
+  const itemShort = gift.itemLocal ?? (gift.item ? gift.item.name.toLowerCase().split(' ').pop()! : 'gift');
+  const storeName = gift.storeName ?? t('gift.theStore');
+  const sender = gift.senderName ?? t('gift.someone');
+  const receiverName = gift.receiverName ?? t('gift.you');
+  const isSender = wallet && wallet.address.toLowerCase() === gift.sender.toLowerCase();
+  const reminderDate = (daysBefore: number) => new Date((gift.expiry - daysBefore * 86_400) * 1000).toLocaleDateString(locale, { month: 'long', day: 'numeric' });
   const shopUrl = gift.storeWebsite || cfg?.hartwellUrl || 'http://localhost:5174';
   const expired = cd ? cd.ms === 0 : false;
   const pending = requests.find((r) => r.status === 'pending');
 
   return (
-    <AppLayout title={`Gift #${gift.id}`}>
+    <AppLayout title={t('gift.title', { id: gift.id })}>
       <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
         <div>
           <GiftCard amount={gift.amountUsd} item={itemName} store={storeName} receiver={gift.receiverName ?? 'you'} status={gift.status} giftNumber={gift.id} />
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             <span className="inline-flex items-center gap-2 text-[17px] font-semibold" role="status" aria-live="polite">
               <span className={`h-[10px] w-[10px] rounded-full ${gift.status === 'Locked' ? 'bg-seal' : gift.status === 'Spent' ? 'bg-change' : 'bg-fog'}`} aria-hidden="true" />
-              {gift.status}
+              {t(`status.${gift.status}` as 'status.Locked')}
             </span>
             {gift.status === 'Locked' && cd && (
-              <span className="mono text-[16px]" aria-label={`Expires in ${cd.d} days ${cd.h} hours`}>
-                {expired ? 'EXPIRED' : `EXPIRES IN ${cd.text.toUpperCase()}`}
-              </span>
+              <span className="mono text-[16px]">{expired ? t('gift.expired') : t('gift.expiresIn', { d: cd.d, h: cd.h, m: cd.m })}</span>
             )}
           </div>
           <div className="mono mt-6 break-all rounded-xl border border-rule bg-paper px-4 py-3 text-[15px]">
-            <span className="text-ink-soft">FINGERPRINT </span>
+            <span className="text-ink-soft">{t('gift.fingerprint')} </span>
             {gift.fingerprint}
           </div>
           {gift.createdTx && (
             <div className="mt-4">
-              <TxLink hash={gift.createdTx} label="Locked on Arc" />
+              <TxLink hash={gift.createdTx} label={t('gift.lockedOnArc')} />
             </div>
           )}
         </div>
@@ -187,26 +204,35 @@ export default function GiftPage() {
         <div className="flex flex-col gap-8">
           <div>
             <h1 className="display text-[clamp(2.5rem,5.5vw,4.5rem)]">
-              {gift.status === 'Spent' ? 'Bought.' : gift.status === 'Refunded' ? 'Refunded.' : `${gift.receiverName ?? 'Your'}${gift.receiverName ? "'s" : ''} ${gift.item ? gift.item.name.toLowerCase().split(' ').pop() : 'gift'}.`}
+              {gift.status === 'Spent' ? t('gift.bought') : gift.status === 'Refunded' ? t('gift.refunded') : gift.receiverName ? t('gift.heading', { name: gift.receiverName, item: itemShort }) : t('gift.headingYour', { item: itemShort })}
             </h1>
             <p className="mt-4 text-[19px]">
-              {gift.status === 'Locked' &&
-                `${gift.senderName ?? 'Someone'} locked ${gift.amountUsd} for the ${itemName.toLowerCase()} at ${storeName}. It works there, for that, for ${gift.receiverName ?? 'you'}.`}
-              {gift.status === 'Spent' && `The ${itemName.toLowerCase()} is paid for.`}
-              {gift.status === 'Refunded' && `It expired unused, so ${gift.amountUsd} went back to ${gift.senderName ?? 'the sender'}.`}
+              {gift.status === 'Locked' && t('gift.lockedLine', { sender, amount: gift.amountUsd, item: itemName.toLowerCase(), store: storeName, receiver: receiverName })}
+              {gift.status === 'Spent' && t('gift.paidLine', { item: itemName.toLowerCase() })}
+              {gift.status === 'Refunded' && t('gift.refundedLine', { amount: gift.amountUsd, sender: gift.senderName ?? t('gift.theSender') })}
             </p>
           </div>
 
           {gift.status === 'Locked' && !expired && (
-            <div className="flex flex-wrap gap-3">
-              <a href={shopUrl} className="btn btn-seal">
-                Shop at {storeName}
-              </a>
-              <button type="button" className="btn btn-outline" onClick={callNow} disabled={calling}>
-                {calling ? 'Calling…' : 'Call me now'}
-              </button>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap gap-3">
+                <a href={shopUrl} className="btn btn-seal">
+                  {t('gift.shopAt', { store: storeName })}
+                </a>
+                <button type="button" className="btn btn-outline" onClick={() => (setShowReminder(true), setReminderToken((x) => x + 1))}>
+                  {t('reminder.button')}
+                </button>
+                <button type="button" className="btn btn-outline" onClick={callNow} disabled={calling}>
+                  {calling ? t('gift.calling') : t('gift.callNow')}
+                </button>
+              </div>
+              <p className="text-[16px] text-ink-soft">{t('reminder.when', { name: gift.receiverName ?? t('gift.you'), d7: reminderDate(7), d4: reminderDate(4) })}</p>
             </div>
           )}
+
+          {gift.status === 'Locked' && !expired && showReminder && <ReminderPanel giftId={gift.id} autoStartToken={reminderToken} onRequested={loadRequests} />}
+
+          <GiftNote giftId={gift.id} />
 
           {call && (
             <div className="flex flex-col gap-4">
@@ -218,12 +244,12 @@ export default function GiftPage() {
               )}
               {call.mode === 'live' && cfg?.features.calls === 'phone' && (
                 <button type="button" className="self-start text-[16px] font-semibold underline underline-offset-4" onClick={() => (setCall({ mode: 'browser', message: '' }), setBrowserToken((t) => t + 1))}>
-                  Or talk here in the browser
+                  {t('gift.orBrowser')}
                 </button>
               )}
               {call.mode === 'demo' && (
                 <div className="bg-vault rounded-[32px] p-3">
-                  <CallCard autoStartToken={playToken} onEnded={onSampleEnded} note="Demo mode: no phone call was placed." className="max-w-none" />
+                  <CallCard autoStartToken={playToken} onEnded={onSampleEnded} note={t('gift.demoNote')} className="max-w-none" />
                 </div>
               )}
             </div>
@@ -231,22 +257,22 @@ export default function GiftPage() {
 
           {gift.status === 'Locked' && pending && (
             <div className="rounded-2xl border-2 border-seal bg-paper p-6" role="region" aria-label="Purchase request">
-              <h2 className="text-[22px] font-semibold">Buy the {itemName.toLowerCase()} now?</h2>
+              <h2 className="text-[22px] font-semibold">{t('pr.title', { item: itemName.toLowerCase() })}</h2>
               <p className="mt-2 text-[17px] text-ink-soft">
-                You said yes on the call{pending.source === 'demo' ? ' (recorded demo)' : ''}. Earmark asks {storeName} to sign the order, then pays it from your gift.
+                {t(pending.source === 'demo' ? 'pr.bodyDemo' : pending.source === 'reminder' ? 'pr.bodyReminder' : 'pr.bodyCall', { store: storeName })}
               </p>
               {!isReceiver && (
                 <div className="mt-4">
-                  <SignIn want="Alex" title={`Sign in as ${gift.receiverName ?? 'the receiver'} to confirm`} />
+                  <SignIn want="Alex" title={t('pr.signInAs', { name: gift.receiverName ?? 'Alex' })} />
                 </div>
               )}
               {isReceiver && (
                 <div className="mt-5 flex flex-wrap gap-3">
                   <button type="button" className="btn btn-seal" onClick={() => confirmBuy(pending)} disabled={!!buying}>
-                    {buying === 'passkey' ? (wallet?.kind === 'metamask' ? 'Confirm in MetaMask…' : 'Confirm with your passkey…') : buying === 'signing' ? `${storeName} is signing…` : buying === 'sending' || buying === 'confirming' ? 'Paying on Arc…' : 'Confirm with passkey'}
+                    {buying === 'passkey' ? (wallet?.kind === 'metamask' ? t('pr.confirmMM') : t('pr.confirmPasskey')) : buying === 'signing' ? t('pr.storeSigning', { store: storeName }) : buying === 'sending' || buying === 'confirming' ? t('pr.paying') : t('pr.confirm')}
                   </button>
                   <button type="button" className="btn btn-outline" onClick={() => decline(pending)} disabled={!!buying}>
-                    Not now
+                    {t('pr.notNow')}
                   </button>
                 </div>
               )}
@@ -263,14 +289,14 @@ export default function GiftPage() {
                   <Coins className="mx-auto mb-2" />
                   <Row
                     className="font-bold"
-                    left={gift.changeTo?.toLowerCase() === gift.receiver.toLowerCase() ? `CHANGE TO ${(gift.receiverName ?? 'RECEIVER').toUpperCase()}` : `BACK TO ${(gift.senderName ?? 'SENDER').toUpperCase()}`}
+                    left={gift.changeTo?.toLowerCase() === gift.receiver.toLowerCase() ? t('receipt.changeTo', { name: (gift.receiverName ?? 'RECEIVER').toUpperCase() }) : t('receipt.backTo', { name: (gift.senderName ?? 'SENDER').toUpperCase() })}
                     right={formatUsdc(gift.change)}
                   />
                 </div>
               )}
               {(gift.redeemedTx || paidTx) && (
                 <div className="mt-4 pb-1 font-sans">
-                  <TxLink hash={(gift.redeemedTx || paidTx)!} label="Paid on Arc" />
+                  <TxLink hash={(gift.redeemedTx || paidTx)!} label={t('gift.paidOnArc')} />
                 </div>
               )}
             </div>
@@ -278,10 +304,10 @@ export default function GiftPage() {
 
           {gift.status === 'Locked' && expired && (
             <div className="flex flex-col gap-3">
-              <p className="text-[18px]">This gift expired unused. Anyone can send it back to {gift.senderName ?? 'the sender'}.</p>
+              <p className="text-[18px]">{t('gift.expiredBody', { sender: gift.senderName ?? t('gift.theSender') })}</p>
               {wallet ? (
                 <button type="button" className="btn btn-outline self-start" onClick={refund} disabled={refunding}>
-                  {refunding ? 'Refunding…' : 'Refund it'}
+                  {refunding ? t('gift.refunding') : t('gift.refund')}
                 </button>
               ) : (
                 <SignIn />
@@ -289,9 +315,12 @@ export default function GiftPage() {
             </div>
           )}
 
+          {isReceiver && <VoiceReply giftId={gift.id} from={wallet!.address} to={gift.senderName ?? t('gift.theSender')} onSent={(r) => setReplies((l) => [...l, r])} />}
+          {(isReceiver || isSender) && <RepliesList replies={replies} viewerIsSender={Boolean(isSender && !isReceiver)} />}
+
           {gift.status === 'Locked' && !pending && !isReceiver && (
             <p className="text-[16px] text-ink-soft">
-              Is this yours? <Link className="font-semibold text-seal underline" to="/me">See your gifts</Link>
+              {t('gift.isYours')} <Link className="font-semibold text-seal underline" to="/me">{t('gift.seeGifts')}</Link>
             </p>
           )}
         </div>

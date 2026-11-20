@@ -11,9 +11,10 @@ const ROOT_ENV = resolve(import.meta.dirname, '../../../.env');
 const VOICE_ID = 'EXAVITQu4vr4xnSDxMaL'; // same voice as the recorded sample on the landing page
 const PUBLIC_API_URL = (process.env.PUBLIC_API_URL ?? '').replace(/\/$/, '');
 
-export const FIRST_MESSAGE = 'Hey {{receiver_name}}, your {{amount}} {{item}} gift expires in {{days_left}} days. Want me to buy it for you?';
+export const FIRST_MESSAGE = 'Hey {{receiver_name}}, your {{amount}} {{item}} gift expires in {{days_left}}. Want me to buy it for you?';
 
-export const PROMPT = `You are Earmark, calling {{receiver_name}} about a locked gift: {{amount}} that can only buy a {{item}}, gift number {{gift_id}}. It expires in {{days_left}} days; unused, it goes back to the sender.
+export const PROMPT = `You are Earmark, calling {{receiver_name}} about a locked gift: {{amount}} that can only buy a {{item}}, gift number {{gift_id}}. It expires in {{days_left}}; unused, it goes back to the sender.
+Always speak {{language_name}}, the language they chose in Earmark. If they answer in another language, switch to theirs.
 Ask if they want you to buy the {{item}} now.
 If they say yes: request the purchase with gift_id "{{gift_id}}". This call's channel is "{{channel}}": if it is "phone", use request_purchase; if it is "browser", use request_purchase_in_app. Use exactly one tool, once.
 After the tool returns, tell them to approve it in the Earmark app with their passkey. Never say the purchase is done or paid; it only happens after they approve.
@@ -91,15 +92,19 @@ async function main() {
             receiver_name: 'Alex',
             amount: '$45',
             item: 'shovel',
-            days_left: '4',
+            days_left: 'four days',
             gift_id: '1',
             channel: 'browser',
+            language_name: 'English',
           },
         },
         prompt: { prompt: PROMPT, tool_ids: toolIds },
       },
+      // The model stays the account default (multilingual); the receiver's language is set per call via overrides.
       tts: { voice_id: VOICE_ID },
       conversation: { max_duration_seconds: 120 },
+      // The languages a receiver can pick in Earmark (server/i18n.ts). Each call sets its language + first message via overrides.
+      language_presets: Object.fromEntries(['es'].map((code) => [code, { overrides: { agent: { language: code } } }])),
     },
     platform_settings: {
       overrides: {

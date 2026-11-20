@@ -10,11 +10,13 @@ import { Call } from '../landing/Call';
 import { TryIt } from '../landing/TryIt';
 import { Footer } from '../landing/Footer';
 import { gsap, ScrollTrigger, prefersReducedMotion } from '../lib/motion';
+import { useHtmlLang } from '../lib/i18n';
 
 export default function Landing() {
   const [assetsReady, setAssetsReady] = useState(false);
   const [fontsReady, setFontsReady] = useState(false);
   const [loading, setLoading] = useState(true);
+  useHtmlLang();
 
   useEffect(() => {
     document.title = 'Earmark: money with a purpose';

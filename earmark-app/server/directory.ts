@@ -57,7 +57,16 @@ export function contactByAddress(a?: string): Contact | undefined {
 }
 
 export const nameOf = (a?: string) => contactByAddress(a)?.name;
-export const publicContact = (c: Contact) => ({ name: c.name, address: c.address, hasPhone: Boolean(c.phone) });
+export const publicContact = (c: Contact) => ({ name: c.name, address: c.address, hasPhone: Boolean(c.phone), language: c.language ?? 'en' });
+
+/** The receiver's language for calls, reminders, notes and their pages. */
+export function setLanguage(address: string, language: string): Contact {
+  const c = contactByAddress(address);
+  if (!c) throw Object.assign(new Error('Sign in first so Earmark knows who you are.'), { status: 404, code: 'NO_CONTACT' });
+  c.language = language;
+  save();
+  return c;
+}
 
 // ---------------------------------------------------------------- stores
 

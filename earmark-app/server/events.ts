@@ -6,6 +6,7 @@ import { db, save } from './db';
 import { forgetGift, readGift, same } from './chain';
 import { contactByAddress, itemFor, shortItem, usdShort } from './directory';
 import { giftUpdate, notify } from './sse';
+import { notifyLocal } from './i18n';
 
 export type RawLog = { address: string; topics: Hex[]; data: Hex; transactionHash: Hex; logIndex: number | string | bigint; blockNumber?: number | string | bigint };
 
@@ -43,7 +44,7 @@ export async function handleLog(log: RawLog, source: 'quicknode' | 'poller'): Pr
     const sender = contactByAddress(args.sender);
     const item = await itemFor(args.store, args.itemId);
     const text = `${sender?.name ?? 'Someone'} sent you ${usdShort(args.amount)} for a ${(item?.name ?? 'gift').toLowerCase()}.`;
-    notify(getAddress(args.receiver), text, { giftId, txHash: log.transactionHash, kind: 'GiftCreated' });
+    await notifyLocal(getAddress(args.receiver), text, { giftId, txHash: log.transactionHash, kind: 'GiftCreated' });
     giftUpdate(giftId, { status: 'Locked', txHash: log.transactionHash }, [args.receiver, args.sender]);
   } else if (ev.eventName === 'GiftRedeemed') {
     tx.redeemedTx = log.transactionHash;
@@ -67,7 +68,8 @@ export async function handleLog(log: RawLog, source: 'quicknode' | 'poller'): Pr
     let mine = `You bought the ${shortItem(item?.name ?? 'item')}.`;
     if (change > 0n && same(args.changeTo, args.receiver)) mine += ` You kept ${formatUsdc(change)} change.`;
     for (const t of new Set(targets.map((a) => a.toLowerCase()))) {
-      notify(getAddress(t), same(t, args.receiver) ? mine : text, { giftId, txHash: log.transactionHash, kind: 'GiftRedeemed' });
+      if (same(t, args.receiver)) await notifyLocal(getAddress(t), mine, { giftId, txHash: log.transactionHash, kind: 'GiftRedeemed' });
+      else notify(getAddress(t), text, { giftId, txHash: log.transactionHash, kind: 'GiftRedeemed' });
     }
     for (const pr of db.purchaseRequests) if (pr.giftId === giftId && pr.status === 'pending') pr.status = 'done';
     giftUpdate(giftId, { status: 'Spent', txHash: log.transactionHash, price: tx.price, change: tx.change, changeTo: tx.changeTo }, targets);

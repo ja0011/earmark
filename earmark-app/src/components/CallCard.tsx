@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadCallScript, type CallScript } from '../lib/callSample';
+import { useT } from '../lib/i18n';
+
+/** A generated recording (reminder or note): server/voice.ts. audioUrl is null when ElevenLabs is off. */
+export type SpokenSource = { audioUrl: string | null; script: CallScript };
 
 type Props = {
   /** Called when the sample finishes (used by the gift page in demo mode). */
@@ -7,18 +11,25 @@ type Props = {
   autoStartToken?: number;
   note?: string;
   className?: string;
+  /** Play this recording instead of the landing-page sample. */
+  source?: SpokenSource;
+  /** Caller label, e.g. "Earmark" or "Maya". */
+  title?: string;
+  /** Which recorded landing sample to play: '/media/call/call' (English) or '/media/call/call-es'. */
+  sample?: string;
 };
 
 /**
  * The phone-call card: a play button, a live waveform from a Web Audio analyser, and the transcript typing
  * in sync with the recorded sample. Nothing plays until the first click.
  */
-export function CallCard({ onEnded, autoStartToken, note, className = '' }: Props) {
+export function CallCard({ onEnded, autoStartToken, note, className = '', source, title = 'Earmark', sample = '/media/call/call' }: Props) {
+  const { t: tr } = useT();
   const audio = useRef<HTMLAudioElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const graph = useRef<{ ctx: AudioContext; analyser: AnalyserNode } | null>(null);
   const [script, setScript] = useState<CallScript | null>(null);
-  const [audioOk, setAudioOk] = useState(true);
+  const [audioOk, setAudioOk] = useState(source ? Boolean(source.audioUrl) : true);
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
   const [started, setStarted] = useState(false);
@@ -27,14 +38,17 @@ export function CallCard({ onEnded, autoStartToken, note, className = '' }: Prop
   const visible = useRef(true);
 
   useEffect(() => {
-    loadCallScript().then(({ script }) => setScript(script));
+    if (source) setScript(source.script);
+    else loadCallScript(sample).then(({ script }) => setScript(script));
     requestAnimationFrame(() => draw(0));
     const io = new IntersectionObserver(([e]) => (visible.current = e.isIntersecting));
     if (canvas.current) io.observe(canvas.current);
     return () => {
       io.disconnect();
       cancelAnimationFrame(raf.current);
-      graph.current?.ctx.close().catch(() => {});
+      // Keep the audio graph: an <audio> element can only ever be wired into one AudioContext, and React's
+      // dev double-mount runs this cleanup right after a play started. Just suspend it.
+      graph.current?.ctx.suspend().catch(() => {});
     };
   }, []);
 
@@ -109,7 +123,8 @@ export function CallCard({ onEnded, autoStartToken, note, className = '' }: Prop
       return;
     }
     setStarted(true);
-    if (audioOk) {
+    if (audioOk && a.getAttribute('src')) {
+      // The waveform is a bonus: if the analyser can't be set up, still play the audio.
       try {
         if (!graph.current) {
           const ctx = new AudioContext();
@@ -121,11 +136,15 @@ export function CallCard({ onEnded, autoStartToken, note, className = '' }: Prop
           analyser.connect(ctx.destination);
           graph.current = { ctx, analyser };
         }
-        await graph.current.ctx.resume();
-        if (a.ended || a.currentTime >= a.duration - 0.05) a.currentTime = 0;
+        if (graph.current.ctx.state !== 'running') await graph.current.ctx.resume();
+      } catch {}
+      try {
+        if (a.ended || (a.duration && a.currentTime >= a.duration - 0.05)) a.currentTime = 0;
         await a.play();
         return;
-      } catch {
+      } catch (e) {
+        // A blocked autoplay is not a broken file: wait for the person's click.
+        if ((e as Error).name === 'NotAllowedError') return;
         setAudioOk(false);
       }
     }
@@ -139,7 +158,7 @@ export function CallCard({ onEnded, autoStartToken, note, className = '' }: Prop
     <div className={`w-full max-w-[520px] rounded-[28px] bg-vault-2 p-6 text-receipt ring-1 ring-white/10 md:p-8 on-dark ${className}`}>
       <audio
         ref={audio}
-        src="/media/call/call.mp3"
+        src={source ? source.audioUrl ?? undefined : `${sample}.mp3`}
         preload="none"
         onPlay={() => {
           setPlaying(true);
@@ -157,7 +176,7 @@ export function CallCard({ onEnded, autoStartToken, note, className = '' }: Prop
         <button
           type="button"
           onClick={toggle}
-          aria-label={playing ? 'Pause the call sample' : 'Play the call sample'}
+          aria-label={source ? (playing ? tr('call.pause') : tr('call.play')) : playing ? 'Pause the call sample' : 'Play the call sample'}
           aria-pressed={playing}
           className="grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full bg-seal text-white transition-transform hover:scale-105"
         >
@@ -169,28 +188,31 @@ export function CallCard({ onEnded, autoStartToken, note, className = '' }: Prop
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-            <span className="text-[20px] font-semibold">Earmark</span>
+            <span className="text-[20px] font-semibold">{title}</span>
             <span className="mono text-[15px] text-fog">{fmt(Math.min(t, duration))}</span>
           </div>
-          <div className="text-[15px] text-fog">{playing ? 'On call' : started ? 'Call ended' : 'Incoming call'}</div>
+          <div className="text-[15px] text-fog">
+            {source ? (playing ? tr('call.on') : started ? tr('call.ended') : tr('call.incoming')) : playing ? 'On call' : started ? 'Call ended' : 'Incoming call'}
+          </div>
           <canvas ref={canvas} className="mt-2 h-[40px] w-full" aria-hidden="true" />
         </div>
       </div>
-      <div className="mt-6 min-h-[150px] space-y-4" aria-live="polite">
+      <div className={`mt-6 space-y-4 ${source ? 'min-h-[64px]' : 'min-h-[150px]'}`} aria-live="polite" translate="no">
         {(script?.lines ?? []).map((l, i) => {
           const shown = l.words.filter((w) => w.start <= t);
           if (!started || !shown.length) return null;
           return (
-            <p key={i} className={`text-[19px] leading-[1.45] ${l.speaker === 'Alex' ? 'pl-8 text-receipt' : 'text-receipt/90'}`}>
+            <p key={i} className={`text-[19px] leading-[1.45] ${l.speaker === 'Alex' && !source ? 'pl-8 text-receipt' : 'text-receipt/90'}`}>
               <span className={`mono mr-2 text-[15px] ${l.speaker === 'Earmark' ? 'text-seal' : 'text-fog'}`}>{l.speaker.toUpperCase()}</span>
-              {shown.map((w) => w.text).join(' ')}
+              {shown.map((w) => w.text).join(script?.joiner ?? ' ')}
               {shown.length < l.words.length && <span className="ml-[2px] inline-block h-[1em] w-[2px] translate-y-[3px] animate-pulse bg-receipt/70" aria-hidden="true" />}
             </p>
           );
         })}
-        {!started && <p className="text-[17px] text-fog">Press play to hear the call.</p>}
-        {started && !audioOk && <p className="text-[15px] text-fog">The recorded sample isn't loaded yet, so this is the transcript only.</p>}
+        {!started && <p className="text-[17px] text-fog">{source ? tr('call.press') : 'Press play to hear the call.'}</p>}
+        {started && !audioOk && <p className="text-[15px] text-fog">{source ? tr('call.noAudio') : "The recorded sample isn't loaded yet, so this is the transcript only."}</p>}
         {note && <p className="text-[15px] text-fog">{note}</p>}
+        {source?.audioUrl && <p className="text-[15px] text-fog">{tr('call.voiceBy')}</p>}
       </div>
     </div>
   );

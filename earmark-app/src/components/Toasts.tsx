@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWallet } from '../lib/wallet';
+import { useT } from '../lib/i18n';
 
 type Note = { id: string; text: string; giftId?: string; kind: string };
 
@@ -8,6 +9,7 @@ type Note = { id: string; text: string; giftId?: string; kind: string };
 export function Toasts() {
   const { wallet } = useWallet();
   const [notes, setNotes] = useState<Note[]>([]);
+  const { t } = useT();
 
   useEffect(() => {
     if (!wallet) return;
@@ -16,7 +18,7 @@ export function Toasts() {
       try {
         const n = JSON.parse(e.data) as Note;
         setNotes((list) => [n, ...list.filter((x) => x.id !== n.id)].slice(0, 3));
-        setTimeout(() => setNotes((list) => list.filter((x) => x.id !== n.id)), 9000);
+        setTimeout(() => setNotes((list) => list.filter((x) => x.id !== n.id)), n.kind === 'Reminder' || n.kind === 'Reply' ? 20000 : 9000);
       } catch {}
     };
     es.addEventListener('notification', on as EventListener);
@@ -31,12 +33,12 @@ export function Toasts() {
           <div className="flex-1">
             <p className="text-[17px] leading-snug">{n.text}</p>
             {n.giftId && (
-              <Link to={`/gift/${n.giftId}`} className="mt-1 inline-block text-[15px] font-semibold underline underline-offset-4">
-                Open gift #{n.giftId}
+              <Link to={`/gift/${n.giftId}${n.kind === 'Reminder' ? '?reminder=1' : ''}`} className="mt-1 inline-block text-[15px] font-semibold underline underline-offset-4">
+                {n.kind === 'Reminder' ? t('toast.listen') : t('toast.open', { id: n.giftId })}
               </Link>
             )}
           </div>
-          <button type="button" aria-label="Dismiss" className="-mr-1 grid h-8 w-8 place-items-center rounded-full hover:bg-white/10" onClick={() => setNotes((l) => l.filter((x) => x.id !== n.id))}>
+          <button type="button" aria-label={t('toast.dismiss')} className="-mr-1 grid h-8 w-8 place-items-center rounded-full hover:bg-white/10" onClick={() => setNotes((l) => l.filter((x) => x.id !== n.id))}>
             <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
           </button>
         </div>

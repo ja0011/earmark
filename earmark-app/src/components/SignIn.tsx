@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Address } from 'viem';
 import { passkeysSupported, useWallet, type Persona } from '../lib/wallet';
+import { useT } from '../lib/i18n';
 
 type Props = { want?: Persona; title?: string; compact?: boolean };
 
@@ -8,7 +9,8 @@ type Props = { want?: Persona; title?: string; compact?: boolean };
  * Two ways in: a passkey demo wallet (Touch ID, nothing to install) or your own MetaMask on Arc.
  * After MetaMask connects, one field asks what people should call you (that's who "Send <name>…" finds).
  */
-export function SignIn({ want, title = 'Sign in', compact }: Props) {
+export function SignIn({ want, title, compact }: Props) {
+  const { t } = useT();
   const { wallet, signInAs, signOut, hasInjected, connectMetaMask, saveMetaMask } = useWallet();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,14 +34,14 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
     return (
       <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${compact ? '' : 'rounded-2xl border border-rule bg-paper px-5 py-4'}`}>
         <span className="text-[17px]">
-          {wallet.kind === 'metamask' ? 'Connected with MetaMask as' : wallet.kind === 'demo' ? 'Signed in as the shared' : 'Signed in as'} <strong className="font-semibold">{wallet.name}</strong>{' '}
+          {wallet.kind === 'metamask' ? t('si.signedInMM') : wallet.kind === 'demo' ? t('si.signedInDemo') : t('si.signedIn')} <strong className="font-semibold">{wallet.name}</strong>{' '}
           <span className="mono text-[15px] text-ink-soft">
             {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
           </span>
         </span>
-        {wrong && <span className="text-[16px] text-ink-soft">This step is for {want}.</span>}
+        {wrong && <span className="text-[16px] text-ink-soft">{t('si.stepFor', { name: want })}</span>}
         <button type="button" className="text-[16px] font-semibold text-seal underline underline-offset-4" onClick={signOut}>
-          {wallet.kind === 'metamask' ? 'Disconnect' : 'Switch'}
+          {wallet.kind === 'metamask' ? t('si.disconnect') : t('si.switch')}
         </button>
       </div>
     );
@@ -99,17 +101,17 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
 
   return (
     <div className="rounded-2xl border border-rule bg-paper p-5 md:p-6">
-      <h2 className="text-[20px] font-semibold">{title}</h2>
+      <h2 className="text-[20px] font-semibold">{title ?? t('si.title')}</h2>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {/* Passkey */}
         <section aria-labelledby="si-passkey" className="flex flex-col rounded-xl border border-rule bg-receipt p-4">
-          <h3 id="si-passkey" className="text-[18px] font-semibold">Try it as Maya or Alex</h3>
-          <p className="mt-1 text-[16px] text-ink-soft">Shared demo accounts, the same on every device. Your device passkey approves each step. No wallet needed.</p>
+          <h3 id="si-passkey" className="text-[18px] font-semibold">{t('si.tryAs')}</h3>
+          <p className="mt-1 text-[16px] text-ink-soft">{t('si.tryAsBody')}</p>
           {!passkeysSupported() && <p className="mt-2 text-[16px] font-medium">This browser can't use passkeys here. Open Earmark on https.</p>}
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             {personas.map((p) => (
               <button key={p} type="button" className="btn btn-seal" disabled={!!busy} onClick={run(p, () => signInAs(p))}>
-                {busy === p ? 'Waiting for your passkey…' : `Sign in as ${p}`}
+                {busy === p ? t('si.waitingPasskey') : t('si.as', { name: p })}
               </button>
             ))}
           </div>
@@ -117,16 +119,16 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
 
         {/* MetaMask */}
         <section aria-labelledby="si-mm" className="flex flex-col rounded-xl border border-rule bg-receipt p-4">
-          <h3 id="si-mm" className="text-[18px] font-semibold">Connect MetaMask</h3>
-          <p className="mt-1 text-[16px] text-ink-soft">Use your own wallet and USDC on Arc Testnet. MetaMask confirms every payment.</p>
+          <h3 id="si-mm" className="text-[18px] font-semibold">{t('si.mm')}</h3>
+          <p className="mt-1 text-[16px] text-ink-soft">{t('si.mmBody')}</p>
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             {hasInjected ? (
               <button type="button" className="btn btn-ink" disabled={!!busy} onClick={connect}>
-                {busy === 'mm' ? 'Check MetaMask…' : 'Connect MetaMask'}
+                {busy === 'mm' ? t('si.mmCheck') : t('si.mm')}
               </button>
             ) : (
               <a className="btn btn-outline" href="https://metamask.io/download/" target="_blank" rel="noreferrer">
-                Install MetaMask
+                {t('si.mmInstall')}
               </a>
             )}
           </div>
@@ -134,7 +136,7 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
       </div>
       {!want && (
         <p className="mt-4 rounded-xl border border-rule bg-receipt px-4 py-3 text-[15px] text-ink-soft">
-          <strong className="font-semibold text-ink">Demo:</strong> Maya sends the gift, Alex spends it. Maya always has test USDC.
+          <strong className="font-semibold text-ink">Demo:</strong> {t('si.demo')}
         </p>
       )}
       {error && (
