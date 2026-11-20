@@ -37,15 +37,19 @@ export function Problem() {
   return (
     <section ref={root} aria-labelledby="problem-title" className="bg-receipt px-5 py-24 md:px-8 md:py-36">
       <div className="mx-auto max-w-[1180px]">
-        <div className="mx-auto max-w-[620px]">
-          <div className="chat flex flex-col gap-4" role="log" aria-label="Messages between Maya and Alex">
+        <div className="mx-auto max-w-[560px] overflow-hidden rounded-[28px] border border-rule bg-paper">
+          <div className="flex items-center gap-3 border-b border-rule px-5 py-4 md:px-6">
+            <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-full bg-ink text-[16px] font-semibold text-receipt">A</span>
+            <span className="text-[17px] font-semibold">Alex</span>
+          </div>
+          <div className="chat flex flex-col gap-4 px-5 py-6 md:px-6 md:py-8" role="log" aria-label="Messages between Maya and Alex">
             {BUBBLES.map((b, i) => (
               <div key={i} className={`bubble flex flex-col ${b.mine ? 'items-end' : 'items-start'}`}>
                 {b.meta && <span className="mb-2 mt-4 self-center text-[15px] text-ink-soft">{b.meta}</span>}
                 <span className="mb-1 px-2 text-[15px] font-semibold text-ink-soft">{b.who}</span>
                 <p
                   className={`max-w-[85%] rounded-[22px] px-5 py-3 text-[20px] leading-snug ${
-                    b.mine ? 'rounded-br-md bg-ink text-receipt' : 'rounded-bl-md border border-rule bg-paper text-ink'
+                    b.mine ? 'rounded-br-md bg-ink text-receipt' : 'rounded-bl-md border border-rule bg-receipt text-ink'
                   }`}
                 >
                   {b.text}

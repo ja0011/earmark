@@ -72,7 +72,7 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
           placeholder="Your first name"
           className="mt-4 w-full rounded-xl border border-rule bg-receipt px-4 py-3 text-[18px] outline-none focus-visible:border-seal"
         />
-        <p className="mt-2 text-[15px] text-ink-soft">Maya and Alex are the shared demo accounts, so pick your own name.</p>
+        <p className="mt-3 rounded-xl border border-rule bg-receipt px-4 py-3 text-[15px] text-ink-soft">Maya and Alex are the shared demo accounts, so pick your own name.</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <button type="submit" className="btn btn-seal" disabled={!!busy || !name.trim()}>
             {busy === 'mm-save' ? 'Saving…' : 'Continue'}
@@ -132,7 +132,11 @@ export function SignIn({ want, title = 'Sign in', compact }: Props) {
           </div>
         </section>
       </div>
-      {!want && <p className="mt-3 text-[15px] text-ink-soft">Demo: Maya sends the gift, Alex spends it. Maya always has test USDC.</p>}
+      {!want && (
+        <p className="mt-4 rounded-xl border border-rule bg-receipt px-4 py-3 text-[15px] text-ink-soft">
+          <strong className="font-semibold text-ink">Demo:</strong> Maya sends the gift, Alex spends it. Maya always has test USDC.
+        </p>
+      )}
       {error && (
         <p role="alert" className="mt-3 text-[16px] font-medium text-ink">
           {error}

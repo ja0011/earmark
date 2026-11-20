@@ -168,8 +168,9 @@ export default function Profile() {
               View on Arc explorer
             </a>
           </div>
-          <p className="mt-1 text-[16px] text-ink-soft">
-            {wallet.kind === 'metamask' ? 'Connected with MetaMask' : wallet.kind === 'demo' ? `Shared demo account: everyone signed in as ${wallet.name} sees this` : 'Signed in with your passkey'} ·{' '}
+          <p className="mt-3 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-rule bg-paper px-4 py-2 text-[16px] text-ink-soft">
+            {wallet.kind === 'metamask' ? 'Connected with MetaMask' : wallet.kind === 'demo' ? `Shared demo account: everyone signed in as ${wallet.name} sees this` : 'Signed in with your passkey'}
+            <span aria-hidden="true">·</span>
             <button type="button" onClick={signOut} className="font-semibold text-ink underline underline-offset-4">
               {wallet.kind === 'metamask' ? 'Disconnect' : 'Switch person'}
             </button>
