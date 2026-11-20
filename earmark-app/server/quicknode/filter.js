@@ -8,7 +8,7 @@
  * Returns only the Earmark contract's GiftCreated / GiftRedeemed / GiftRefunded logs, decoded,
  * or null so QuickNode skips the delivery entirely for blocks with nothing for us.
  */
-const EARMARK = '0x0000000000000000000000000000000000000000';
+const EARMARK = '0x9d91f4ee5ffad6a31d662801b695514770c4d0bd'; // Earmark on Arc testnet (contracts/deployments/arc-testnet.json)
 
 const TOPICS = {
   '0x011646b8aaaf35685f302664a2d64bbf4527f9672523ba1b66ba4075c3fa89e6': 'GiftCreated', // (uint256,address,address,address,bytes32,uint256,uint64,bytes32)
