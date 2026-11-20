@@ -18,7 +18,7 @@ export const SCRIPT = [
   "If it's never used, the money comes back.",
   'Earmark. Money with a purpose.',
 ];
-const VOICES = { chris: 'iP95p4xoKVk53GoZ742B', jessica: 'cgSgspJ2msm6clMCkdW9' };
+const VOICES = { jessica: 'cgSgspJ2msm6clMCkdW9' }; // chosen voice (Chris was the alternative: iP95p4xoKVk53GoZ742B)
 const MODEL = process.env.TTS_MODEL || 'eleven_v4';
 
 const srtTime = (s) => {
@@ -35,7 +35,7 @@ for (const [name, id] of Object.entries(VOICES)) {
   });
   if (!res.ok) throw new Error(`${name}: ${res.status} ${await res.text()}`);
   const j = await res.json();
-  fs.writeFileSync(path.join(DIR, `earmark-voiceover-${name}.mp3`), Buffer.from(j.audio_base64, 'base64'));
+  fs.writeFileSync(path.join(DIR, `earmark-voiceover.mp3`), Buffer.from(j.audio_base64, 'base64'));
   // Captions: one cue per script line, timed from the character alignment.
   const a = j.normalized_alignment ?? j.alignment;
   const chars = a.characters.join('');
@@ -46,6 +46,6 @@ for (const [name, id] of Object.entries(VOICES)) {
     from = end;
     return `${i + 1}\n${srtTime(a.character_start_times_seconds[Math.max(0, start)])} --> ${srtTime(a.character_end_times_seconds[Math.min(end, a.character_end_times_seconds.length - 1)])}\n${line}\n`;
   });
-  fs.writeFileSync(path.join(DIR, `earmark-voiceover-${name}.srt`), cues.join('\n'));
+  fs.writeFileSync(path.join(DIR, `earmark-voiceover.srt`), cues.join('\n'));
   console.log(`${name}: done (${MODEL})`);
 }
