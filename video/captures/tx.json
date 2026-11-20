@@ -1,0 +1,5 @@
+{
+ "gift": 14,
+ "lock": ["https://explorer.testnet.arc.io/tx/0x04ab8832238787fbe670d45bcfaf8ce358d90dfdda716f1d69d755884e7d496e"],
+ "pay": ["https://explorer.testnet.arc.io/tx/0x02588df7a11f31bbf4047889b9e81d802d25d0d0c04fa4f61d4ddf9341caf475"]
+}

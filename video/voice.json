@@ -1,0 +1,708 @@
+{
+ "duration": 55.839,
+ "lines": [
+  {
+   "text": "You send money for something that matters. It gets spent on something else.",
+   "file": "audio/line-1.mp3",
+   "at": 0.6,
+   "start": 0.6,
+   "end": 5.105,
+   "words": [
+    {
+     "text": "You",
+     "start": 0.6,
+     "end": 0.763
+    },
+    {
+     "text": "send",
+     "start": 0.855,
+     "end": 1.076
+    },
+    {
+     "text": "money",
+     "start": 1.169,
+     "end": 1.413
+    },
+    {
+     "text": "for",
+     "start": 1.482,
+     "end": 1.598
+    },
+    {
+     "text": "something",
+     "start": 1.645,
+     "end": 1.935
+    },
+    {
+     "text": "that",
+     "start": 1.982,
+     "end": 2.109
+    },
+    {
+     "text": "matters.",
+     "start": 2.167,
+     "end": 2.783
+    },
+    {
+     "text": "It",
+     "start": 3.061,
+     "end": 3.189
+    },
+    {
+     "text": "gets",
+     "start": 3.224,
+     "end": 3.398
+    },
+    {
+     "text": "spent",
+     "start": 3.421,
+     "end": 3.711
+    },
+    {
+     "text": "on",
+     "start": 3.77,
+     "end": 3.862
+    },
+    {
+     "text": "something",
+     "start": 3.92,
+     "end": 4.222
+    },
+    {
+     "text": "else.",
+     "start": 4.28,
+     "end": 5.105
+    }
+   ]
+  },
+  {
+   "text": "Earmark locks money to one item, at one store, for one person.",
+   "file": "audio/line-2.mp3",
+   "at": 6.305,
+   "start": 6.305,
+   "end": 10.67,
+   "words": [
+    {
+     "text": "Earmark",
+     "start": 6.305,
+     "end": 6.862
+    },
+    {
+     "text": "locks",
+     "start": 6.955,
+     "end": 7.292
+    },
+    {
+     "text": "money",
+     "start": 7.362,
+     "end": 7.605
+    },
+    {
+     "text": "to",
+     "start": 7.675,
+     "end": 7.779
+    },
+    {
+     "text": "one",
+     "start": 7.907,
+     "end": 8.105
+    },
+    {
+     "text": "item,",
+     "start": 8.163,
+     "end": 8.511
+    },
+    {
+     "text": "at",
+     "start": 8.534,
+     "end": 8.65
+    },
+    {
+     "text": "one",
+     "start": 8.72,
+     "end": 8.917
+    },
+    {
+     "text": "store,",
+     "start": 8.964,
+     "end": 9.358
+    },
+    {
+     "text": "for",
+     "start": 9.393,
+     "end": 9.521
+    },
+    {
+     "text": "one",
+     "start": 9.591,
+     "end": 9.753
+    },
+    {
+     "text": "person.",
+     "start": 9.8,
+     "end": 10.67
+    }
+   ]
+  },
+  {
+   "text": "Gifts that become what you meant. Donations that buy exactly what a shelter needs. Groceries for family. Budgets for your team.",
+   "file": "audio/line-3.mp3",
+   "at": 11.67,
+   "start": 11.67,
+   "end": 19.611,
+   "words": [
+    {
+     "text": "Gifts",
+     "start": 11.67,
+     "end": 12.1
+    },
+    {
+     "text": "that",
+     "start": 12.158,
+     "end": 12.297
+    },
+    {
+     "text": "become",
+     "start": 12.343,
+     "end": 12.727
+    },
+    {
+     "text": "what",
+     "start": 12.761,
+     "end": 12.912
+    },
+    {
+     "text": "you",
+     "start": 12.959,
+     "end": 13.04
+    },
+    {
+     "text": "meant.",
+     "start": 13.11,
+     "end": 13.516
+    },
+    {
+     "text": "Donations",
+     "start": 13.76,
+     "end": 14.329
+    },
+    {
+     "text": "that",
+     "start": 14.375,
+     "end": 14.491
+    },
+    {
+     "text": "buy",
+     "start": 14.538,
+     "end": 14.677
+    },
+    {
+     "text": "exactly",
+     "start": 14.747,
+     "end": 15.234
+    },
+    {
+     "text": "what",
+     "start": 15.281,
+     "end": 15.408
+    },
+    {
+     "text": "a",
+     "start": 15.443,
+     "end": 15.466
+    },
+    {
+     "text": "shelter",
+     "start": 15.501,
+     "end": 15.803
+    },
+    {
+     "text": "needs.",
+     "start": 15.85,
+     "end": 16.291
+    },
+    {
+     "text": "Groceries",
+     "start": 16.5,
+     "end": 17.034
+    },
+    {
+     "text": "for",
+     "start": 17.092,
+     "end": 17.208
+    },
+    {
+     "text": "family.",
+     "start": 17.266,
+     "end": 17.87
+    },
+    {
+     "text": "Budgets",
+     "start": 18.079,
+     "end": 18.485
+    },
+    {
+     "text": "for",
+     "start": 18.531,
+     "end": 18.636
+    },
+    {
+     "text": "your",
+     "start": 18.694,
+     "end": 18.81
+    },
+    {
+     "text": "team.",
+     "start": 18.857,
+     "end": 19.611
+    }
+   ]
+  },
+  {
+   "text": "Type who it's for and what it should buy. Lock it with Face ID. It can only be spent on that, and the change goes to them.",
+   "file": "audio/line-4.mp3",
+   "at": 20.611,
+   "start": 20.611,
+   "end": 28.552,
+   "words": [
+    {
+     "text": "Type",
+     "start": 20.611,
+     "end": 20.971
+    },
+    {
+     "text": "who",
+     "start": 21.006,
+     "end": 21.145
+    },
+    {
+     "text": "it's",
+     "start": 21.215,
+     "end": 21.342
+    },
+    {
+     "text": "for",
+     "start": 21.389,
+     "end": 21.679
+    },
+    {
+     "text": "and",
+     "start": 21.795,
+     "end": 21.935
+    },
+    {
+     "text": "what",
+     "start": 22.004,
+     "end": 22.167
+    },
+    {
+     "text": "it",
+     "start": 22.213,
+     "end": 22.271
+    },
+    {
+     "text": "should",
+     "start": 22.294,
+     "end": 22.469
+    },
+    {
+     "text": "buy.",
+     "start": 22.503,
+     "end": 23.014
+    },
+    {
+     "text": "Lock",
+     "start": 23.293,
+     "end": 23.537
+    },
+    {
+     "text": "it",
+     "start": 23.606,
+     "end": 23.676
+    },
+    {
+     "text": "with",
+     "start": 23.722,
+     "end": 23.862
+    },
+    {
+     "text": "Face",
+     "start": 23.92,
+     "end": 24.187
+    },
+    {
+     "text": "ID.",
+     "start": 24.233,
+     "end": 24.767
+    },
+    {
+     "text": "It",
+     "start": 25.011,
+     "end": 25.151
+    },
+    {
+     "text": "can",
+     "start": 25.185,
+     "end": 25.301
+    },
+    {
+     "text": "only",
+     "start": 25.359,
+     "end": 25.545
+    },
+    {
+     "text": "be",
+     "start": 25.603,
+     "end": 25.685
+    },
+    {
+     "text": "spent",
+     "start": 25.719,
+     "end": 25.998
+    },
+    {
+     "text": "on",
+     "start": 26.056,
+     "end": 26.149
+    },
+    {
+     "text": "that,",
+     "start": 26.195,
+     "end": 26.613
+    },
+    {
+     "text": "and",
+     "start": 26.648,
+     "end": 26.834
+    },
+    {
+     "text": "the",
+     "start": 26.892,
+     "end": 26.962
+    },
+    {
+     "text": "change",
+     "start": 27.008,
+     "end": 27.322
+    },
+    {
+     "text": "goes",
+     "start": 27.356,
+     "end": 27.554
+    },
+    {
+     "text": "to",
+     "start": 27.6,
+     "end": 27.658
+    },
+    {
+     "text": "them.",
+     "start": 27.716,
+     "end": 28.552
+    }
+   ]
+  },
+  {
+   "text": "For stores, it's one button at checkout and a signer on the server. Get paid instantly, at your real price, only for the item the money was meant for.",
+   "file": "audio/line-5.mp3",
+   "at": 31.152,
+   "start": 31.152,
+   "end": 40.811,
+   "words": [
+    {
+     "text": "For",
+     "start": 31.152,
+     "end": 31.361
+    },
+    {
+     "text": "stores,",
+     "start": 31.419,
+     "end": 31.93
+    },
+    {
+     "text": "it's",
+     "start": 31.976,
+     "end": 32.15
+    },
+    {
+     "text": "one",
+     "start": 32.232,
+     "end": 32.452
+    },
+    {
+     "text": "button",
+     "start": 32.487,
+     "end": 32.743
+    },
+    {
+     "text": "at",
+     "start": 32.801,
+     "end": 32.859
+    },
+    {
+     "text": "checkout",
+     "start": 32.893,
+     "end": 33.346
+    },
+    {
+     "text": "and",
+     "start": 33.404,
+     "end": 33.532
+    },
+    {
+     "text": "a",
+     "start": 33.578,
+     "end": 33.613
+    },
+    {
+     "text": "signer",
+     "start": 33.66,
+     "end": 34.02
+    },
+    {
+     "text": "on",
+     "start": 34.101,
+     "end": 34.217
+    },
+    {
+     "text": "the",
+     "start": 34.263,
+     "end": 34.333
+    },
+    {
+     "text": "server.",
+     "start": 34.38,
+     "end": 34.972
+    },
+    {
+     "text": "Get",
+     "start": 35.297,
+     "end": 35.529
+    },
+    {
+     "text": "paid",
+     "start": 35.587,
+     "end": 35.889
+    },
+    {
+     "text": "instantly,",
+     "start": 35.959,
+     "end": 36.667
+    },
+    {
+     "text": "at",
+     "start": 36.702,
+     "end": 36.806
+    },
+    {
+     "text": "your",
+     "start": 36.852,
+     "end": 36.969
+    },
+    {
+     "text": "real",
+     "start": 37.027,
+     "end": 37.247
+    },
+    {
+     "text": "price,",
+     "start": 37.317,
+     "end": 37.921
+    },
+    {
+     "text": "only",
+     "start": 38.164,
+     "end": 38.466
+    },
+    {
+     "text": "for",
+     "start": 38.524,
+     "end": 38.629
+    },
+    {
+     "text": "the",
+     "start": 38.675,
+     "end": 38.745
+    },
+    {
+     "text": "item",
+     "start": 38.826,
+     "end": 39.105
+    },
+    {
+     "text": "the",
+     "start": 39.163,
+     "end": 39.233
+    },
+    {
+     "text": "money",
+     "start": 39.279,
+     "end": 39.5
+    },
+    {
+     "text": "was",
+     "start": 39.546,
+     "end": 39.662
+    },
+    {
+     "text": "meant",
+     "start": 39.72,
+     "end": 39.906
+    },
+    {
+     "text": "for.",
+     "start": 39.964,
+     "end": 40.811
+    }
+   ]
+  },
+  {
+   "text": "Every gift has its own fingerprint. Earmark even calls to remind you. And if it's never used, the money goes back.",
+   "file": "audio/line-6.mp3",
+   "at": 42.012,
+   "start": 42.012,
+   "end": 49.396,
+   "words": [
+    {
+     "text": "Every",
+     "start": 42.012,
+     "end": 42.349
+    },
+    {
+     "text": "gift",
+     "start": 42.418,
+     "end": 42.72
+    },
+    {
+     "text": "has",
+     "start": 42.778,
+     "end": 42.918
+    },
+    {
+     "text": "its",
+     "start": 42.976,
+     "end": 43.092
+    },
+    {
+     "text": "own",
+     "start": 43.138,
+     "end": 43.266
+    },
+    {
+     "text": "fingerprint.",
+     "start": 43.324,
+     "end": 44.067
+    },
+    {
+     "text": "Earmark",
+     "start": 44.392,
+     "end": 44.868
+    },
+    {
+     "text": "even",
+     "start": 44.938,
+     "end": 45.147
+    },
+    {
+     "text": "calls",
+     "start": 45.205,
+     "end": 45.472
+    },
+    {
+     "text": "to",
+     "start": 45.518,
+     "end": 45.576
+    },
+    {
+     "text": "remind",
+     "start": 45.658,
+     "end": 46.006
+    },
+    {
+     "text": "you.",
+     "start": 46.075,
+     "end": 46.412
+    },
+    {
+     "text": "And",
+     "start": 46.656,
+     "end": 46.819
+    },
+    {
+     "text": "if",
+     "start": 46.865,
+     "end": 46.923
+    },
+    {
+     "text": "it's",
+     "start": 46.969,
+     "end": 47.097
+    },
+    {
+     "text": "never",
+     "start": 47.132,
+     "end": 47.341
+    },
+    {
+     "text": "used,",
+     "start": 47.422,
+     "end": 47.84
+    },
+    {
+     "text": "the",
+     "start": 47.887,
+     "end": 47.991
+    },
+    {
+     "text": "money",
+     "start": 48.049,
+     "end": 48.247
+    },
+    {
+     "text": "goes",
+     "start": 48.293,
+     "end": 48.502
+    },
+    {
+     "text": "back.",
+     "start": 48.56,
+     "end": 49.396
+    }
+   ]
+  },
+  {
+   "text": "Earmark. Money with a purpose.",
+   "file": "audio/line-7.mp3",
+   "at": 50.596,
+   "start": 50.596,
+   "end": 52.639,
+   "words": [
+    {
+     "text": "Earmark.",
+     "start": 50.596,
+     "end": 51.223
+    },
+    {
+     "text": "Money",
+     "start": 51.339,
+     "end": 51.594
+    },
+    {
+     "text": "with",
+     "start": 51.641,
+     "end": 51.769
+    },
+    {
+     "text": "a",
+     "start": 51.803,
+     "end": 51.827
+    },
+    {
+     "text": "purpose.",
+     "start": 51.873,
+     "end": 52.639
+    }
+   ]
+  }
+ ]
+}
