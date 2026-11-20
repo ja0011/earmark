@@ -4,6 +4,8 @@
 
 Maya sends her brother Alex $45 for a snow shovel. The money is locked in USDC on Arc and can only buy that shovel, at Hartwell Supply, for Alex. Alex taps "Pay with Earmark gift" at checkout, the store gets $39.98, and the $5.02 change goes straight to Alex. If he tries to buy a drill with it, it says no. If he forgets, Earmark calls him.
 
+**Try it live:** [Earmark](https://earmark-production-366133a5.up.railway.app) · [Hartwell Supply](https://hartwell-production.up.railway.app) (Arc testnet; live prices are about 1/100 of the story, so the demo gift is $0.45 and the shovel $0.40).
+
 Built for UBC Hackathon 2026: Consumer Apps · Best use of Arc · QuickNode Streams · ElevenLabs.
 
 ## What's in the repo
