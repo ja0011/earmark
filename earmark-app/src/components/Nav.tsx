@@ -60,7 +60,7 @@ export function Nav({ variant = 'app' }: { variant?: 'landing' | 'app' }) {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
-        dark ? 'text-receipt on-dark' : vault ? 'border-b border-white/10 bg-vault/90 text-receipt backdrop-blur-md on-dark' : 'border-b border-rule/70 bg-receipt/92 text-ink backdrop-blur-md'
+        dark ? 'text-ink' : vault ? 'border-b border-white/10 bg-vault/90 text-receipt backdrop-blur-md on-dark' : 'border-b border-rule/70 bg-receipt/92 text-ink backdrop-blur-md'
       }`}
     >
       <nav aria-label="Main" className="mx-auto flex h-[68px] max-w-[1320px] items-center justify-between px-5 md:px-8">

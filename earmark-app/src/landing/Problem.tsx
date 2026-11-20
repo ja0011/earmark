@@ -1,5 +1,4 @@
 import { useLayoutEffect, useRef } from 'react';
-import { Media } from '../components/Media';
 import { gsap, prefersReducedMotion } from '../lib/motion';
 
 const BUBBLES = [
@@ -38,8 +37,7 @@ export function Problem() {
   return (
     <section ref={root} aria-labelledby="problem-title" className="bg-receipt px-5 py-24 md:px-8 md:py-36">
       <div className="mx-auto max-w-[1180px]">
-        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
-          <Media name="story-maya-couch" ratio={3 / 2} alt="Maya on her couch, smiling at her phone." className="rounded-[20px]" />
+        <div className="mx-auto max-w-[620px]">
           <div className="chat flex flex-col gap-4" role="log" aria-label="Messages between Maya and Alex">
             {BUBBLES.map((b, i) => (
               <div key={i} className={`bubble flex flex-col ${b.mine ? 'items-end' : 'items-start'}`}>
@@ -56,12 +54,12 @@ export function Problem() {
             ))}
           </div>
         </div>
-        <div className="mt-20 md:mt-28">
+        <div className="mt-20 text-center md:mt-28">
           <h2 id="problem-title" className="problem-title display" style={{ fontSize: 'clamp(3.25rem, 8vw, 8rem)' }}>
             <span className="block overflow-hidden"><span className="ln block">You meant</span></span>
             <span className="block overflow-hidden"><span className="ln block">a shovel.</span></span>
           </h2>
-          <p className="mt-6 max-w-[560px] text-[22px] leading-[1.45]">Money doesn't remember why you sent it. Earmark does.</p>
+          <p className="mx-auto mt-6 max-w-[560px] text-balance text-[22px] leading-[1.45]">Money doesn't remember why you sent it. Earmark does.</p>
         </div>
       </div>
     </section>

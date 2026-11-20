@@ -53,7 +53,7 @@ export default function Landing() {
   const onDone = useCallback(() => setLoading(false), []);
 
   return (
-    <div className="bg-receipt text-ink">
+    <div className="overflow-x-clip bg-receipt text-ink">
       <a href="#problem-title" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-receipt">
         Skip to content
       </a>

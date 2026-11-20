@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { GiftCard } from '../components/GiftCard';
-import { Media } from '../components/Media';
+import { LockGlyph } from '../components/Lock';
 import { Coins, Row } from '../components/ReceiptRow';
 import { gsap, ScrollTrigger, prefersReducedMotion, useMedia } from '../lib/motion';
 
@@ -53,8 +53,34 @@ function Still({ i, className = '' }: { i: number; className?: string }) {
         <GiftCard amount="$45.00" item="Snow shovel" store="Hartwell Supply" receiver="Alex" className="beat-card max-w-[380px]" />
       </div>
     );
-  if (i === 1) return <Media name="hartwell-storefront" ratio={16 / 9} alt="The front of Hartwell Supply in winter, warm light inside." className={`rounded-[20px] ${className}`} />;
-  return <Media name="story-alex-shoveling" ratio={3 / 2} alt="Alex shoveling snow at sunrise with the new shovel." className={`rounded-[20px] ${className}`} />;
+  if (i === 1)
+    return (
+      <div className={`grid aspect-[3/2] place-items-center rounded-[20px] bg-vault-2 p-6 ${className}`}>
+        <div className="w-full max-w-[360px] rounded-[14px] bg-[#FBFAF7] p-5 text-[#2A2F24]" role="img" aria-label="Hartwell Supply checkout: snow shovel, $39.98, paid with an Earmark gift.">
+          <div className="mb-3 flex items-baseline justify-between border-b border-[#2A2F24]/15 pb-3">
+            <span className="font-display text-[18px] font-extrabold tracking-[-0.01em]">HARTWELL SUPPLY</span>
+            <span className="text-[15px] opacity-70">Checkout</span>
+          </div>
+          <div className="mono flex justify-between text-[16px]">
+            <span>Snow shovel</span>
+            <span>$39.98</span>
+          </div>
+          <div className="mt-4 flex items-center justify-center gap-2 rounded-full bg-seal px-4 py-3 text-[16px] font-semibold text-white">
+            <LockGlyph size={18} color="#fff" />
+            Pay with Earmark gift
+          </div>
+        </div>
+      </div>
+    );
+  return (
+    <div className={`grid aspect-[3/2] place-items-center rounded-[20px] bg-vault-2 p-6 ${className}`}>
+      <div className="flex flex-col items-center text-center" role="img" aria-label="$5.02 change goes to Alex.">
+        <Coins className="mb-4 scale-150" />
+        <span className="mono text-[16px] text-fog">CHANGE TO ALEX</span>
+        <span className="mono mt-1 text-[clamp(2.6rem,5vw,4rem)] font-bold leading-none text-change">+$5.02</span>
+      </div>
+    </div>
+  );
 }
 
 export function Vault() {
